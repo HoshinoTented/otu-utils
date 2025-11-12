@@ -1,0 +1,21 @@
+[versions]
+
+project = "0.0.0"
+java = "21"
+
+netty = "4.2.7.Final"
+kala = "0.82.0"
+gson = "2.13.2"
+
+kotlinx = "1.9.0"
+
+[libraries]
+
+io-netty = { group = "io.netty", name = "netty-all", version.ref = "netty" }
+kala-base = { group = "org.glavo.kala", name = "kala-base", version.ref = "kala" }
+kala-collection = { group = "org.glavo.kala", name = "kala-collection", version.ref = "kala" }
+kala-common = { group = "org.glavo.kala", name = "kala-common", version.ref = "kala" }
+kala-gson = { group = "org.glavo.kala", name = "kala-common-gson", version.ref = "kala" }
+
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }

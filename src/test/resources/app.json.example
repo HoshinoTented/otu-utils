@@ -1,0 +1,5 @@
+{
+  "client_id": 114514,      // your client id, remember to remove this comment in use
+  "client_secret": "your very important client secret, dont tell any one!",
+  "redirect_uri": "https://your.redirect.uri.com"
+}
