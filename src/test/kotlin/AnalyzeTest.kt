@@ -15,6 +15,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 
 class AnalyzeTest : TestBase() {
   companion object {
@@ -69,7 +70,8 @@ class AnalyzeTest : TestBase() {
     
     // the limit can be calculated by the difference of play count
     val analyzer = ScoreAnalyzer(application, user, histories, 1000)
-    val reports = analyzer.analyze(Clock.System.now())
+    val now = Clock.System.now()
+    val reports = analyzer.analyze(now, now - 30.days)
     reports.forEachIndexed { idx, report ->
       report.history.save()
       

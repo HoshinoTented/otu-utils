@@ -53,6 +53,10 @@ data class Score(
     fun prettyAcc(accuracy: Float): String {
       return String.format("%2.2f%%", accuracy * 100)
     }
+    
+    fun prettyDiff(bias: Float): String {
+      return String.format("%+2.2f%%", bias * 100)
+    }
   }
 }
 

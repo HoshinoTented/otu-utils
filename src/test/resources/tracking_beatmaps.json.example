@@ -1,0 +1,6 @@
+[
+  {
+    "id": 114514,           // beatmap id, remember to remove this comment
+    "comment": "your comment to the beatmap, can be null"
+  }
+]

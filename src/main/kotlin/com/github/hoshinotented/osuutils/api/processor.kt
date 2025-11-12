@@ -15,7 +15,6 @@ import java.net.http.HttpRequest
 import java.nio.charset.Charset
 import kotlin.reflect.jvm.jvmName
 
-
 fun String.toSnakeCase(): String {
   val result = StringBuilder()
   for (i in indices) {
@@ -75,7 +74,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
   var bodyType = clazz.getAnnotation(BodyType::class.java)?.type
   
   if (bodyType == null) {
-    println("[WARN] No BodyType is given, default to Url")
+    OsuApi.logger.warning("No BodyType is given, default to Url")
     bodyType = BodyType.Type.Url
   }
   
@@ -103,7 +102,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
       assert(ref.isEmpty)
       map[name] = Option.some(field)
       
-      println("path reference '$name' is resolved to ${clazz.canonicalName}#${field.name}")
+      OsuApi.logger.info("path reference '$name' is resolved to ${clazz.canonicalName}#${field.name}")
       
       // 对于被 path ref 的 field，不会再被作为载荷
       continue
@@ -113,7 +112,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
       ?: field.name.toSnakeCase() // 所有参数都必须保证是 camelCase, 否则 toSnakeCase 是未定义行为
     data[dataName] = field
     
-    println("parameter '$dataName' is resolved to ${clazz.canonicalName}#${field.name}")
+    OsuApi.logger.info("parameter '$dataName' is resolved to ${clazz.canonicalName}#${field.name}")
   }
   
   for (key in map.keysView()) {
@@ -124,7 +123,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
         throw IllegalArgumentException("Path referenced method must not returns void")
       }
       
-      println("path reference '$key' is resolved to ${clazz.canonicalName}#${method.name}()")
+      OsuApi.logger.info("path reference '$key' is resolved to ${clazz.canonicalName}#${method.name}()")
       map[key] = Option.some(method)
     }
   }
@@ -135,7 +134,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
     serialize(request, map[it].get(), bodyType) ?: ""   // basically only the last path argument is nullable
   }
   
-  println("Request path: $rebuiltPath")
+  OsuApi.logger.info("Request path: $rebuiltPath")
   
   val dataValues = MutableMap.create<String, String>()
   for (pair in data) {

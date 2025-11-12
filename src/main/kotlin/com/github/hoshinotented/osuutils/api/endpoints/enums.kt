@@ -23,5 +23,5 @@ enum class Type {
 }
 
 enum class Mod {
-  NF, DT, HD
+  NF, DT, HD, HR
 }

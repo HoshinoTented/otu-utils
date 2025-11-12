@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Contract
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.logging.Logger
 import kotlin.time.Clock
 
 @Serializable
@@ -39,6 +40,8 @@ data class OsuApplication(
 object OsuApi {
   const val BASE_URL = "https://osu.ppy.sh"
   const val API_V2 = "$BASE_URL/api/v2/"
+  
+  val logger = Logger.getLogger("OsuAPI")
   
   val deJson: Json = Json {
     prettyPrint = true
@@ -58,7 +61,7 @@ object OsuApi {
    */
   @Contract(mutates = "param1")
   fun OsuApplication.refreshToken(token: Token): Token {
-    println("token is expired, refreshing...")
+    logger.info("token is expired, refreshing...")
     
     val req = OAuth2Endpoints.RefreshToken(clientId, clientSecret, token.refreshToken)
       .toRequest()

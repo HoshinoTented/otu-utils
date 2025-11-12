@@ -48,12 +48,12 @@ class ScoreAnalyzer(
     val historyBestCompare: Float,
   ) {
     companion object {
-      private fun StringBuilder.simplePrettyScore(score: Score, bias: Float? = null) {
+      private fun StringBuilder.simplePrettyScore(score: Score, diff: Float? = null) {
         val acc = Score.prettyAcc(score.accuracy)
         append(acc)
-        if (bias != null) {
+        if (diff != null) {
           append("(")
-          append(Score.prettyAcc(bias))
+          append(Score.prettyDiff(diff))
           append(")")
         }
         
@@ -114,16 +114,25 @@ class ScoreAnalyzer(
     }
   }
   
-  fun analyze(now: Instant): ImmutableSeq<AnalyzeReport> {
+  /**
+   * @param fallbackSince used when no score in history, this is very useful when initializing a new history, such as don't import old scores
+   */
+  fun analyze(now: Instant, fallbackSince: Instant? = null): ImmutableSeq<AnalyzeReport> {
     return histories.map {
       val scores = application.beatmapScores(user, it.beatmapId)
-      analyze(now, it, scores)
+      analyze(now, it, scores, fallbackSince = fallbackSince)
     }
   }
   
-  fun analyze(now: Instant, history: ScoreHistory, scores: ImmutableSeq<Score>): AnalyzeReport {
+  fun analyze(
+    now: Instant,
+    history: ScoreHistory,
+    scores: ImmutableSeq<Score>,
+    fallbackSince: Instant? = null,
+  ): AnalyzeReport {
     val since = history.scores.lastOrNull
       ?.createdAt?.plus(1.seconds) // hope there is no song with 1 second long
+      ?: fallbackSince
     
     val scoreSince = if (since == null) scores
     else ScoreHistory.binaryAnswer(scores, since).toSeq()
