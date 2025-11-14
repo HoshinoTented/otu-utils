@@ -18,6 +18,7 @@ import kotlin.time.Instant
  * @param groups the index of each group begins, a score group is never empty. This allow the user to re-analyze recent scores
  * @param recentBest the best (by acc) score recently (5 days)
  * @param best the best (by acc) score
+ * @param recentWindow TODO: move to somewhere else
  */
 @Serializable
 data class ScoreHistory(

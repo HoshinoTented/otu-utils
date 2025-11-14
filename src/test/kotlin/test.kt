@@ -62,11 +62,11 @@ open class MyTest {
       println(user.player)
       
       this.user = user
-      
-      trackingBeatmaps = Json.decodeFromString(
-        SeqSerializer(TrackBeatmap.serializer()),
-        File(TRACKING_BEATMAPS_DATA).readText()
-      )
+
+//      trackingBeatmaps = Json.decodeFromString(
+//        SeqSerializer(TrackBeatmap.serializer()),
+//        File(TRACKING_BEATMAPS_DATA).readText()
+//      )
     }
     
     @JvmStatic

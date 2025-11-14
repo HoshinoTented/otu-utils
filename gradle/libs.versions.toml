@@ -6,12 +6,13 @@ java = "21"
 netty = "4.2.7.Final"
 kala = "0.82.0"
 gson = "2.13.2"
+jline = "3.30.0"
+picocli = "4.7.7"
 
 kotlinx = "1.9.0"
 
 [libraries]
 
-io-netty = { group = "io.netty", name = "netty-all", version.ref = "netty" }
 kala-base = { group = "org.glavo.kala", name = "kala-base", version.ref = "kala" }
 kala-collection = { group = "org.glavo.kala", name = "kala-collection", version.ref = "kala" }
 kala-common = { group = "org.glavo.kala", name = "kala-common", version.ref = "kala" }
@@ -19,3 +20,7 @@ kala-gson = { group = "org.glavo.kala", name = "kala-common-gson", version.ref =
 
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+jline = { group = "org.jline", name = "jline", version.ref = "jline" }
+picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli" }
+picocli-codegen = { group = "info.picocli", name = "picocli-codegen", version.ref = "picocli" }

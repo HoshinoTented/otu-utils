@@ -9,11 +9,13 @@ import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
 import com.github.hoshinotented.osuutils.data.User
+import com.github.hoshinotented.osuutils.database.BeatmapDatabase
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
+import kotlin.io.path.Path
 import kotlin.time.ExperimentalTime
 
 abstract class TestBase {
@@ -22,7 +24,7 @@ abstract class TestBase {
     const val USER_DATA = "$RES_DIR/user_data.json"
     const val APP_DATA = "$RES_DIR/app.json"
     
-    val beatmapDatabase: BeatmapDatabase = BeatmapDatabase()
+    val beatmapDatabase = BeatmapDatabase(Path("$RES_DIR/beatmaps"))
     lateinit var application: OsuApplication
     lateinit var json: Json
     lateinit var user: User
@@ -57,8 +59,6 @@ abstract class TestBase {
       println(user.player)
       
       this.user = user
-      
-      BeatmapDatabase.init()
     }
     
     fun post() {

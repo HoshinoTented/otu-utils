@@ -4,23 +4,19 @@ import com.github.hoshinotented.osuutils.api.Beatmaps
 import com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores
 import com.github.hoshinotented.osuutils.api.OsuApplication
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
 import kala.collection.immutable.ImmutableSeq
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.*
+import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
 
 class ScoreAnalyzer(
   val application: OsuApplication,
   val user: User,
   val histories: ImmutableSeq<ScoreHistory>,
-  val limit: Int,
 ) {
   /**
    * @param history new history with new scores added
@@ -57,7 +53,12 @@ class ScoreAnalyzer(
           append(")")
         }
         
-        append("    created at ")
+        if (score.mods.isNotEmpty) {
+          append(" ")
+          append(prettyMods(MutableEnumSet.from(Mod::class.java, score.mods)))
+        }
+        
+        append(" created at ")
         append(prettyTime(score.createdAt))
       }
       
@@ -74,12 +75,6 @@ class ScoreAnalyzer(
         append(post)
       }
       
-      fun prettyTime(time: Instant): String {
-        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-          .withLocale(Locale.getDefault())
-          .withZone(ZoneId.systemDefault())
-          .format(time.toJavaInstant())
-      }
     }
     
     fun pretty(historyBest: Score?): String = buildString {
