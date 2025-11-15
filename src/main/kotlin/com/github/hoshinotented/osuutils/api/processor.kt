@@ -2,6 +2,7 @@ package com.github.hoshinotented.osuutils.api
 
 import com.github.hoshinotented.osuutils.api.endpoints.EndpointRequest.Companion.initCommon
 import kala.collection.Map
+import kala.collection.immutable.ImmutableMap
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableMap
 import kala.control.Option
@@ -13,6 +14,7 @@ import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpRequest
 import java.nio.charset.Charset
+import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
 fun String.toSnakeCase(): String {
@@ -65,11 +67,37 @@ fun parseEndpointPath(path: String): ImmutableSeq<EndpointComponent> {
   }
 }
 
-fun processEndpointRequest(request: Any): HttpRequest.Builder {
-  val clazz = request::class.java
+class RequestObjectResolveResult(
+  val endpoint: Endpoint,
+  val bodyType: BodyType.Type,
+  val components: ImmutableSeq<EndpointComponent>,
+  val pathReferenced: Map<String, Member>,
+  val data: Map<String, Field>,
+) {
+  companion object {
+    val CACHE: MutableMap<Class<*>, RequestObjectResolveResult> = MutableMap.create()
+  }
+}
+
+// no multi thread, sory
+fun resolveEndpointRequest(clazz: KClass<*>): RequestObjectResolveResult {
+  OsuApi.logger.info("Resolving ${clazz.jvmName}")
+  var cache = RequestObjectResolveResult.CACHE.getOrNull(clazz.java)
+  if (cache != null) {
+    OsuApi.logger.info("Cache hit for ${clazz.jvmName}")
+    return cache
+  }
+  
+  cache = doResolveEndpointRequest(clazz)
+  RequestObjectResolveResult.CACHE.put(clazz.java, cache)
+  return cache
+}
+
+fun doResolveEndpointRequest(clazz: KClass<*>): RequestObjectResolveResult {
+  val clazz = clazz.java
   
   val endpoint: Endpoint = clazz.getAnnotation(Endpoint::class.java)
-    ?: throw IllegalArgumentException("${request::class.jvmName} must be annotated with '@Endpoint'")
+    ?: throw IllegalArgumentException("${clazz.canonicalName} must be annotated with '@Endpoint'")
   
   var bodyType = clazz.getAnnotation(BodyType::class.java)?.type
   
@@ -80,7 +108,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
   
   val components = parseEndpointPath(endpoint.path)
   // find the corresponding member in path reference, only field or method without parameters
-  val map = kala.collection.mutable.MutableMap.create<String, Option<Member>>()
+  val map = MutableMap.create<String, Option<Member>>()
   
   components.forEach {
     if (it is EndpointComponent.Ref) {
@@ -88,7 +116,6 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
     }
   }
   
-  // TODO: consider cache?
   val data = MutableMap.create<String, Field>()
   
   for (field in clazz.declaredFields) {
@@ -128,10 +155,23 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
     }
   }
   
-  // after resolve, now build http request
+  val pathReferenced = ImmutableMap.from(
+    map.view()
+      .mapValues { _, v -> v.get() })
+  
+  return RequestObjectResolveResult(endpoint, bodyType, components, pathReferenced, data)
+}
+
+fun processEndpointRequest(request: Any): HttpRequest.Builder {
+  val result = resolveEndpointRequest(request::class)
+  val endpoint = result.endpoint
+  val bodyType = result.bodyType
+  val components = result.components
+  val map = result.pathReferenced
+  val data = result.data
   
   val rebuiltPath = EndpointComponent.rebuild(components) {
-    serialize(request, map[it].get(), bodyType) ?: ""   // basically only the last path argument is nullable
+    serialize(request, map[it], bodyType) ?: ""   // basically only the last path argument is nullable
   }
   
   OsuApi.logger.info("Request path: $rebuiltPath")

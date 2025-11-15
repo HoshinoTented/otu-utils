@@ -2,10 +2,10 @@
 
 import com.github.hoshinotented.osuutils.api.*
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.endpoints.OAuth2Endpoints
 import com.github.hoshinotented.osuutils.api.endpoints.Type
 import com.github.hoshinotented.osuutils.api.endpoints.Users
 import com.github.hoshinotented.osuutils.data.User
-import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

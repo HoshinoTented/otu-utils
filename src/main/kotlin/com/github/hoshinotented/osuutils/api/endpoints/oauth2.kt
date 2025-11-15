@@ -1,10 +1,10 @@
-package com.github.hoshinotented.osuutils.api
+package com.github.hoshinotented.osuutils.api.endpoints
 
-import com.github.hoshinotented.osuutils.api.endpoints.EndpointRequest
+import com.github.hoshinotented.osuutils.api.Endpoint
+import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.data.Token
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.time.Instant
 
 object OAuth2Endpoints {
   enum class GrantType {

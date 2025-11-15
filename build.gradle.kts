@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
-
 plugins {
   id("java")
   kotlin("jvm") version "2.2.21"
@@ -9,8 +6,10 @@ plugins {
   application
 }
 
+val projectVersion: String = libs.versions.project.get()
+
 group = "com.github.hoshinotented"
-version = libs.versions.project.get()
+version = projectVersion
 
 application.mainClass.set("com.github.hoshinotented.osuutils.cli.MainKt")
 
@@ -30,8 +29,6 @@ dependencies {
   implementation(libs.picocli)
   
   kapt(libs.picocli.codegen)
-
-//  implementation(libs.io.netty)
   
   testImplementation(kotlin("test"))
 }
@@ -52,14 +49,6 @@ kotlin {
   compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
 }
 
-//tasks.named<KotlinCompilationTask<*>>("compileKotlin") {
-//  compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
-//}
-
-//tasks.named<KotlinCompilationTask<*>>("compileTestKotlin") {
-//  compilerOptions.optIn.add("kotlin.time.ExperimentalTime")
-//}
-
 val genDir = layout.projectDirectory.dir("src/main/gen")
 
 sourceSets.main {
@@ -70,7 +59,7 @@ val generateVersion = tasks.register("generateVersion") {
   doLast {
     val code = """
       public class GenerateVersion {
-        public static final String VERSION = "${libs.versions.project.get()}";
+        public static final String VERSION = "$projectVersion";
       }
     """.trimIndent()
     
@@ -89,6 +78,7 @@ tasks.register<Jar>("fatJar") {
   }
   
   val jar = tasks.jar
+  dependsOn(jar)
   with(jar.get())
 }
 

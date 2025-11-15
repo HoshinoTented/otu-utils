@@ -10,6 +10,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSets
 import com.github.hoshinotented.osuutils.api.endpoints.Beatmaps
 import com.github.hoshinotented.osuutils.api.endpoints.Mode
+import com.github.hoshinotented.osuutils.api.endpoints.OAuth2Endpoints
 import com.github.hoshinotented.osuutils.api.endpoints.OsuUser
 import com.github.hoshinotented.osuutils.api.endpoints.Type
 import com.github.hoshinotented.osuutils.api.endpoints.Users
@@ -19,7 +20,6 @@ import com.github.hoshinotented.osuutils.data.Token
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
-import kala.collection.mutable.MutableList
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

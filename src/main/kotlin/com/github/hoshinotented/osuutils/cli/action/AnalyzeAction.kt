@@ -3,6 +3,7 @@ package com.github.hoshinotented.osuutils.cli.action
 import com.github.hoshinotented.osuutils.ScoreAnalyzer
 import com.github.hoshinotented.osuutils.api.Beatmaps
 import com.github.hoshinotented.osuutils.api.OsuApplication
+import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.BeatmapDatabase
@@ -10,6 +11,7 @@ import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyTime
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
+import kala.collection.mutable.MutableList
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
@@ -29,10 +31,15 @@ class AnalyzeAction(
     val analyzer = ScoreAnalyzer(application, user, histories)
     val now = Clock.System.now()
     val reports = analyzer.analyze(now, now - 30.days)
+    val unplayed = MutableList.create<BeatmapId>()
+    
     reports.forEachIndexed { idx, report ->
       historyDatabase.save(report.history)
       
-      if (report.playCount == 0) return@forEachIndexed
+      if (report.playCount == 0) {
+        unplayed.append(report.history.beatmapId)
+        return@forEachIndexed
+      }
       
       val track = trackingBeatmaps.get(idx)
       val oldHistory = histories.get(idx)
@@ -57,6 +64,17 @@ class AnalyzeAction(
       // We can use new history, as the best score may be updated
       // we already rule out the case of playCount == 0
       reportBuffer.appendLine(report.report!!.pretty(oldHistory.best))
+    }
+    
+    if (unplayed.isNotEmpty) {
+      reportBuffer.appendLine()
+      reportBuffer.appendLine("The following beatmaps are not played since last analyzing:")
+      unplayed.forEach {
+        val map = beatmapProvider.beatmap(it)!!
+        val mapSet = beatmapProvider.beatmapSet(map.beatmapSetId)!!
+        
+        reportBuffer.appendLine("[${prettyBeatmap(mapSet, map)}](${Beatmaps.makeBeatmapUrl(map.id)})")
+      }
     }
     
     return reportBuffer.toString()
