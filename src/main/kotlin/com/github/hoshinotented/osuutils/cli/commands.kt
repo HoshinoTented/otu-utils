@@ -70,9 +70,11 @@ class CommandAnalyze() : Callable<Int> {
     names = ["--show-recent-unplayed"],
     description = ["Show recent unplayed beatmap in the 'not played' list of the report"],
   )
-  var showRecentUnplayed: Boolean = true
+  var showRecentUnplayed: Boolean = false
   
   override fun call(): Int = parent.catching {
+    parent.cliLogger.info("Run 'analyze' with: showRecentUnplayed=$showRecentUnplayed")
+    
     val user = user()
     val app = app()
     val action = AnalyzeAction(app, user, scoreHistoryDB, mapDB, AnalyzeAction.Options(showRecentUnplayed))
