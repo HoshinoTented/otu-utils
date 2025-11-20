@@ -3,8 +3,7 @@ package com.github.hoshinotented.osuutils.cli.action
 import com.github.hoshinotented.osuutils.ScoreAnalyzer
 import com.github.hoshinotented.osuutils.api.Beatmaps
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.BeatmapDatabase
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
@@ -20,7 +19,10 @@ class AnalyzeAction(
   val user: User,
   val historyDatabase: ScoreHistoryDatabase,
   beatmapDatabase: BeatmapDatabase,
+  val options: Options = Options(false),
 ) {
+  data class Options(val showRecentUnplayed: Boolean)
+  
   val beatmapProvider = BeatmapProvider(application, user, beatmapDatabase)
   
   fun analyze(): String {
@@ -31,13 +33,13 @@ class AnalyzeAction(
     val analyzer = ScoreAnalyzer(application, user, histories)
     val now = Clock.System.now()
     val reports = analyzer.analyze(now, now - 30.days)
-    val unplayed = MutableList.create<BeatmapId>()
+    val unplayed = MutableList.create<ScoreHistory>()
     
     reports.forEachIndexed { idx, report ->
       historyDatabase.save(report.history)
       
       if (report.playCount == 0) {
-        unplayed.append(report.history.beatmapId)
+        unplayed.append(report.history)
         return@forEachIndexed
       }
       
@@ -66,11 +68,16 @@ class AnalyzeAction(
       reportBuffer.appendLine(report.report!!.pretty(oldHistory.best))
     }
     
-    if (unplayed.isNotEmpty) {
+    val recentPlayedUnplayed = if (options.showRecentUnplayed) {
+      unplayed
+    } else unplayed.filter { it.scoreSince(now - it.recentWindow).isNotEmpty }
+    
+    if (recentPlayedUnplayed.isNotEmpty) {
       reportBuffer.appendLine()
       reportBuffer.appendLine("The following beatmaps are not played since last analyzing:")
-      unplayed.forEach {
-        val map = beatmapProvider.beatmap(it)!!
+      recentPlayedUnplayed.forEach {
+        val id = it.beatmapId
+        val map = beatmapProvider.beatmap(id)!!
         val mapSet = beatmapProvider.beatmapSet(map.beatmapSetId)!!
         
         reportBuffer.appendLine("[${prettyBeatmap(mapSet, map)}](${Beatmaps.makeBeatmapUrl(map.id)})")

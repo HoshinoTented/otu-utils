@@ -19,7 +19,7 @@ class ScoreAnalyzer(
   val histories: ImmutableSeq<ScoreHistory>,
 ) {
   /**
-   * @param history new history with new scores added
+   * @param history new history with new scores added, if [playCount] == 0, then this is the original history
    * @param report null if [playCount] is `0`
    */
   data class AnalyzeReport(

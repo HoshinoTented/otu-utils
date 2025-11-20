@@ -66,10 +66,16 @@ class CommandAnalyze() : Callable<Int> {
   @CommandLine.ParentCommand
   lateinit var parent: Main
   
+  @CommandLine.Option(
+    names = ["--show-recent-unplayed"],
+    description = ["Show recent unplayed beatmap in the 'not played' list of the report"],
+  )
+  var showRecentUnplayed: Boolean = true
+  
   override fun call(): Int = parent.catching {
     val user = user()
     val app = app()
-    val action = AnalyzeAction(app, user, scoreHistoryDB, mapDB)
+    val action = AnalyzeAction(app, user, scoreHistoryDB, mapDB, AnalyzeAction.Options(showRecentUnplayed))
     val analResult = action.analyze()
     val output = output
     

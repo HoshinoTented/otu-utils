@@ -29,6 +29,10 @@ data class ScoreHistory(
   val recentWindow: Duration = 5.days,
 ) {
   companion object {
+    /**
+     * Find all scores created since [since].
+     * @param scores must be ordered by [Score.CreateTimeComparator]
+     */
     fun binaryAnswer(scores: ImmutableSeq<Score>, since: Instant): SeqView<Score> {
       val dummyScore = Score(0.0F, since, 0, ImmutableSeq.empty(), 0, null, null, null)
       val result = scores.binarySearch(dummyScore) { l, r ->
@@ -61,6 +65,10 @@ data class ScoreHistory(
     val newBest = newBest ?: this.best
     
     return copy(groups = newGroups, scores = this.scores.appendedAll(scores), best = newBest)
+  }
+  
+  fun scoreSince(since: Instant): SeqView<Score> {
+    return binaryAnswer(this.scores, since)
   }
   
   /**
