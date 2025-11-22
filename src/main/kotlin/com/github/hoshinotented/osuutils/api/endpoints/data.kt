@@ -81,5 +81,9 @@ data class Beatmap(
 ) {
   companion object {
     val DUMMY = Beatmap(0, 0, 0.0F, "")
+    
+    fun prettyDifficulty(difficulty: Float): String {
+      return String.format("%.2f*", difficulty)
+    }
   }
 }

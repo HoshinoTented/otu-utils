@@ -13,7 +13,7 @@ import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 fun prettyBeatmap(set: BeatmapSet, map: Beatmap): String {
-  return "${set.titleUnicode} / ${map.version} / ${map.difficulty}*"
+  return "${set.titleUnicode} / ${map.version} / ${Beatmap.prettyDifficulty(map.difficulty)}"
 }
 
 fun prettyTime(time: Instant): String {
