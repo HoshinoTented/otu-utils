@@ -10,6 +10,7 @@ import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyTime
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
+import com.github.hoshinotented.osuutils.providers.ScoreHistoryProvider
 import kala.collection.mutable.MutableList
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -17,18 +18,19 @@ import kotlin.time.Duration.Companion.days
 class AnalyzeAction(
   val application: OsuApplication,
   val user: User,
-  val historyDatabase: ScoreHistoryDatabase,
+  historyDatabase: ScoreHistoryDatabase,
   beatmapDatabase: BeatmapDatabase,
   val options: Options = Options(false),
 ) {
   data class Options(val showRecentUnplayed: Boolean)
   
   val beatmapProvider = BeatmapProvider(application, user, beatmapDatabase)
+  val historyProvider = ScoreHistoryProvider(application, user, historyDatabase)
   
   fun analyze(): String {
     val reportBuffer = StringBuilder()
-    val trackingBeatmaps = historyDatabase.tracking().beatmaps
-    val histories = historyDatabase.loadAll()
+    val trackingBeatmaps = historyProvider.historyDB.tracking().beatmaps
+    val histories = historyProvider.histories()
     
     val analyzer = ScoreAnalyzer(application, user, histories)
     val now = Clock.System.now()
@@ -36,7 +38,7 @@ class AnalyzeAction(
     val unplayed = MutableList.create<ScoreHistory>()
     
     reports.forEachIndexed { idx, report ->
-      historyDatabase.save(report.history)
+      historyProvider.historyDB.save(report.history)
       
       if (report.playCount == 0) {
         unplayed.append(report.history)
@@ -88,7 +90,7 @@ class AnalyzeAction(
   }
   
   fun removeLastAnalyze() {
-    val histories = historyDatabase.loadAll()
+    val histories = historyProvider.histories()
     histories.forEach {
       val beatmap = beatmapProvider.beatmap(it.beatmapId)!!
       val set = beatmapProvider.beatmapSet(beatmap.beatmapSetId)!!
@@ -96,7 +98,7 @@ class AnalyzeAction(
       if (it.groups.isNotEmpty()) {
         val index = it.groups.last()
         val newHistory = it.copy(scores = it.scores.slice(0, index), groups = it.groups.copyOf(it.groups.size - 1))
-        historyDatabase.save(newHistory)
+        historyProvider.historyDB.save(newHistory)
         val firstScoreInGroup = it.scores.get(index)
         println("Removed all scores since " + prettyTime(firstScoreInGroup.createdAt))
       }
