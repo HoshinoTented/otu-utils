@@ -27,6 +27,7 @@ dependencies {
   implementation(libs.gson)
   implementation(libs.jline)
   implementation(libs.picocli)
+  implementation(libs.jfreechart)
   
   kapt(libs.picocli.codegen)
   
@@ -71,11 +72,13 @@ val generateVersion = tasks.register("generateVersion") {
 }
 
 tasks.register<Jar>("fatJar") {
-  archiveClassifier.set("jar")
+  archiveClassifier.set("fat")
   from(project.configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
   manifest {
     attributes["Main-Class"] = application.mainClass.get()
   }
+  
+  exclude("**/module-info.class")
   
   val jar = tasks.jar
   dependsOn(jar)

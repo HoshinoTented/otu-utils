@@ -8,6 +8,8 @@ kala = "0.82.0"
 gson = "2.13.2"
 jline = "3.30.0"
 picocli = "4.7.7"
+chart-fx = "11.3.1"
+jfreechart = "1.5.6"
 
 kotlinx = "1.9.0"
 
@@ -20,6 +22,9 @@ kala-gson = { group = "org.glavo.kala", name = "kala-common-gson", version.ref =
 
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+chart-fx = { group = "io.fair-acc", name = "chartfx", version.ref = "chart-fx" }
+jfreechart = { group = "org.jfree", name = "jfreechart", version.ref = "jfreechart" }
 
 jline = { group = "org.jline", name = "jline", version.ref = "jline" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli" }

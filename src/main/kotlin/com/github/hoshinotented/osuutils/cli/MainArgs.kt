@@ -12,6 +12,7 @@ import java.util.concurrent.Callable
     CommandMe::class,
     CommandAnalyze::class,
     CommandRollback::class,
+    CommandRenderScores::class,
     CommandLine.HelpCommand::class
   ]
 )
@@ -47,13 +48,13 @@ abstract class MainArgs : Callable<Int> {
   
   @CommandLine.Option(
     names = ["--dry-run"],
-    description = ["Don't update almost anything to disk (except user token, cause this is very important)"]
+    description = ["[NOT IMPLEMENTED] Don't update almost anything to disk (except user token, cause this is very important)"]
   )
   var dryRun: Boolean = false
   
   @CommandLine.Option(
     names = ["--no-refresh"],
-    description = ["Don't refresh user token and fail when user token is expired, usually used with --dry-run"]
+    description = ["[NOT IMPLEMENTED] Don't refresh user token and fail when user token is expired, usually used with --dry-run"]
   )
   var noRefresh: Boolean = false
 }

@@ -2,8 +2,13 @@ package com.github.hoshinotented.osuutils.cli
 
 import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.Users
+import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
+import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.cli.action.AnalyzeAction
+import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
+import com.github.hoshinotented.osuutils.prettyBeatmap
 import picocli.CommandLine
+import java.io.File
 import java.util.concurrent.Callable
 import kotlin.io.writeText
 
@@ -104,5 +109,33 @@ class CommandRollback() : Callable<Int> {
     val action = AnalyzeAction(app, user, scoreHistoryDB, mapDB)
     action.removeLastAnalyze()
     return 0
+  }
+}
+
+@CommandLine.Command(name = "render-scores", description = ["Render scores of the beatmap to a chart"])
+class CommandRenderScores() : Callable<Int> {
+  @CommandLine.ParentCommand
+  lateinit var parent: Main
+  
+  @CommandLine.Parameters(index = "0", paramLabel = "BEATMAP ID")
+  var beatmapId: BeatmapId = 0
+  
+  @CommandLine.Parameters(index = "1", paramLabel = "FILE", description = ["Render output, in .png format"])
+  lateinit var outFile: File
+  
+  override fun call(): Int = parent.catching {
+    val user = user()
+    val db = scoreHistoryDB
+    val scores = db.load(beatmapId)
+    val map = mapDB.load(beatmapId)
+      ?: throw Exception("No local beatmap data for beatmap: $beatmapId.")
+    val set = mapDB.loadSet(map.beatmapSetId)
+      ?: throw Exception("No local beatmap set data for beatmap: $beatmapId, database might be corrupted.")
+    val title = prettyBeatmap(set, map)
+    
+    RenderScoresAction(outFile, title, user.player.userName, scores.scores)
+      .run()
+    
+    return@catching 0
   }
 }
