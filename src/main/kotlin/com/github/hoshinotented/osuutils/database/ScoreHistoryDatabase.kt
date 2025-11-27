@@ -52,7 +52,7 @@ class ScoreHistoryDatabase(val historyDir: Path) {
     if (cache != null) return cache
     
     val path = historyDir.resolve("$beatmapId.json")
-    if (!path.exists()) return ScoreHistory(beatmapId, ImmutableSeq.empty(), intArrayOf(), null)
+    if (!path.exists()) return ScoreHistory(beatmapId, ImmutableSeq.empty(), intArrayOf(), intArrayOf(), null)
     
     val history = commonSerde.decodeFromString<ScoreHistory>(path.readText())
     scoreHistoryCache.put(beatmapId, history)

@@ -2,7 +2,9 @@ package com.github.hoshinotented.osuutils.cli
 
 import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.OsuApplication
+import com.github.hoshinotented.osuutils.data.AnalyzeMetadata
 import com.github.hoshinotented.osuutils.data.User
+import com.github.hoshinotented.osuutils.database.AnalyzeDatabase
 import com.github.hoshinotented.osuutils.database.BeatmapDatabase
 import com.github.hoshinotented.osuutils.database.OsuApplicationDatabase
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
@@ -16,6 +18,7 @@ class Main : MainArgs() {
   internal val appDB by lazy { OsuApplicationDatabase(profile.toPath()) }
   internal val scoreHistoryDB by lazy { ScoreHistoryDatabase(userProfile.resolve("beatmap_histories").toPath()) }
   internal val mapDB by lazy { BeatmapDatabase(profile.resolve("beatmaps").toPath()) }
+  internal val analyzeMetadataDB by lazy { AnalyzeDatabase(userProfile.toPath()) }
   
   val cliLogger = Logger.getLogger("CLI")
   

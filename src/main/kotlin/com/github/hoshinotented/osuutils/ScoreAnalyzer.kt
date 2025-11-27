@@ -17,6 +17,7 @@ class ScoreAnalyzer(
   val application: OsuApplication,
   val user: User,
   val histories: ImmutableSeq<ScoreHistory>,
+  val analyzeId: Int,
 ) {
   /**
    * @param history new history with new scores added, if [playCount] == 0, then this is the original history
@@ -152,7 +153,7 @@ class ScoreAnalyzer(
     }
     
     return AnalyzeReport(
-      history.addScores(scoreSince, newBest), playCount, Report(
+      history.addScores(scoreSince, newBest, analyzeId), playCount, Report(
         bestScore, worstScore, recentBest, recentBestCompare, historyBestCompare
       )
     )
@@ -169,6 +170,6 @@ fun OsuApplication.initializeScoreHistory(user: User, beatmapId: BeatmapId): Sco
     
     // scores are always empty, even [score] is available, cause [scores] is considered the list of analyzed scores,
     // but [score] can be very new
-    ScoreHistory(beatmapId, ImmutableSeq.empty(), intArrayOf(), score)
+    ScoreHistory(beatmapId, ImmutableSeq.empty(), intArrayOf(), intArrayOf(), score)
   }
 }

@@ -100,6 +100,9 @@ class RenderScoresAction(val outFile: File, val title: String, val userName: Str
         .format(LocalDateTime.ofInstant(it.key, ZoneId.systemDefault()))
     }
     
+    // https://stackoverflow.com/questions/6665354/changing-the-shapes-of-points-in-scatter-plot
+    // change shape of plot (according to )
+    
     // https://stackoverflow.com/questions/9767201/jfreechart-with-string-and-double
     chart.xyPlot.domainAxis = SymbolAxis("date", dates.toArray(String::class.java)).apply {
       isGridBandsVisible = false

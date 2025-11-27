@@ -3,8 +3,10 @@ package com.github.hoshinotented.osuutils.cli.action
 import com.github.hoshinotented.osuutils.ScoreAnalyzer
 import com.github.hoshinotented.osuutils.api.Beatmaps
 import com.github.hoshinotented.osuutils.api.OsuApplication
+import com.github.hoshinotented.osuutils.data.AnalyzeRecord
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
+import com.github.hoshinotented.osuutils.database.AnalyzeDatabase
 import com.github.hoshinotented.osuutils.database.BeatmapDatabase
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
 import com.github.hoshinotented.osuutils.prettyBeatmap
@@ -18,6 +20,7 @@ import kotlin.time.Duration.Companion.days
 class AnalyzeAction(
   val application: OsuApplication,
   val user: User,
+  val analyzeDatabase: AnalyzeDatabase,
   historyDatabase: ScoreHistoryDatabase,
   beatmapDatabase: BeatmapDatabase,
   val options: Options = Options(false),
@@ -31,11 +34,14 @@ class AnalyzeAction(
     val reportBuffer = StringBuilder()
     val trackingBeatmaps = historyProvider.historyDB.tracking().beatmaps
     val histories = historyProvider.histories()
+    val analyzeId = analyzeDatabase.load().lastId + 1
     
-    val analyzer = ScoreAnalyzer(application, user, histories)
+    val analyzer = ScoreAnalyzer(application, user, histories, analyzeId)
     val now = Clock.System.now()
     val reports = analyzer.analyze(now, now - 30.days)
     val unplayed = MutableList.create<ScoreHistory>()
+    val analyzeRecord = AnalyzeRecord(analyzeId, now)
+    analyzeDatabase.save(analyzeDatabase.load().addRecord(analyzeRecord))
     
     reports.forEachIndexed { idx, report ->
       historyProvider.historyDB.save(report.history)
@@ -89,18 +95,32 @@ class AnalyzeAction(
     return reportBuffer.toString()
   }
   
-  fun removeLastAnalyze() {
+  // TODO: not good, if a score history is not updated in previous analyze, it will also be modified
+  //       I guess we need to store the time when we analyze, or an id
+  fun removeLastAnalyze(analyzeId: Int?) {
     val histories = historyProvider.histories()
+    val analyzeId = analyzeId ?: analyzeDatabase.load().lastId
+    // we don't remove the analyze record in analyzeDatabase
+    
     histories.forEach {
       val beatmap = beatmapProvider.beatmap(it.beatmapId)!!
       val set = beatmapProvider.beatmapSet(beatmap.beatmapSetId)!!
       println("Removing the last group of ${prettyBeatmap(set, beatmap)}")
-      if (it.groups.isNotEmpty()) {
+      val ids = it.analyzeIds
+      
+      if (ids == null) {
+        println("Analyze id not found")
+        return@forEach
+      }
+      
+      if (ids.isNotEmpty() && ids.last() == analyzeId) {
         val index = it.groups.last()
         val newHistory = it.copy(scores = it.scores.slice(0, index), groups = it.groups.copyOf(it.groups.size - 1))
         historyProvider.historyDB.save(newHistory)
         val firstScoreInGroup = it.scores.get(index)
         println("Removed all scores since " + prettyTime(firstScoreInGroup.createdAt))
+      } else {
+        println("No score is removed, could be either there is no score or the analyze id doesn't match")
       }
     }
   }
