@@ -2,23 +2,21 @@ package com.github.hoshinotented.osuutils.cli
 
 import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.data.AnalyzeMetadata
 import com.github.hoshinotented.osuutils.data.User
-import com.github.hoshinotented.osuutils.database.AnalyzeDatabase
-import com.github.hoshinotented.osuutils.database.BeatmapDatabase
-import com.github.hoshinotented.osuutils.database.OsuApplicationDatabase
-import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
-import com.github.hoshinotented.osuutils.database.UserDatabase
+import com.github.hoshinotented.osuutils.database.*
+import com.github.hoshinotented.osuutils.io.DefaultFileIO
+import com.github.hoshinotented.osuutils.io.DryFileIO
 import picocli.CommandLine
 import java.util.logging.Level
 import java.util.logging.Logger
 
 class Main : MainArgs() {
+  internal val io by lazy { if (dryRun) DryFileIO else DefaultFileIO }
   internal val userDB by lazy { UserDatabase(userProfile.toPath()) }
-  internal val appDB by lazy { OsuApplicationDatabase(profile.toPath()) }
-  internal val scoreHistoryDB by lazy { ScoreHistoryDatabase(userProfile.resolve("beatmap_histories").toPath()) }
-  internal val mapDB by lazy { BeatmapDatabase(profile.resolve("beatmaps").toPath()) }
-  internal val analyzeMetadataDB by lazy { AnalyzeDatabase(userProfile.toPath()) }
+  internal val appDB by lazy { OsuApplicationDatabase(profile.toPath(), io) }
+  internal val scoreHistoryDB by lazy { ScoreHistoryDatabase(userProfile.resolve("beatmap_histories").toPath(), io) }
+  internal val mapDB by lazy { BeatmapDatabase(profile.resolve("beatmaps").toPath(), io) }
+  internal val analyzeMetadataDB by lazy { AnalyzeDatabase(userProfile.toPath(), io) }
   
   val cliLogger = Logger.getLogger("CLI")
   

@@ -22,6 +22,7 @@ import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.Contract
 import java.net.http.HttpClient
@@ -35,7 +36,10 @@ data class OsuApplication(
   @SerialName("client_id") val clientId: Int,
   @SerialName("client_secret") val clientSecret: String,
   @SerialName("redirect_uri") val redirectUri: String,
-)
+) {
+  @Transient
+  var dontRefreshToken = false
+}
 
 object OsuApi {
   const val BASE_URL = "https://osu.ppy.sh"
@@ -62,6 +66,9 @@ object OsuApi {
   @Contract(mutates = "param1")
   fun OsuApplication.refreshToken(token: Token): Token {
     logger.info("token is expired, refreshing...")
+    if (dontRefreshToken) {
+      throw IllegalStateException("Don't refresh token")
+    }
     
     val req = OAuth2Endpoints.RefreshToken(clientId, clientSecret, token.refreshToken)
       .toRequest()

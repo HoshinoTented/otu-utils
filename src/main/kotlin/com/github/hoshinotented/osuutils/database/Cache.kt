@@ -1,6 +1,7 @@
 package com.github.hoshinotented.osuutils.database
 
 import com.github.hoshinotented.osuutils.commonSerde
+import com.github.hoshinotented.osuutils.io.FileIO
 import kala.collection.mutable.MutableMap
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.decodeFromString
@@ -31,15 +32,15 @@ abstract class Cache<T : Any> {
 /**
  * @param T must be [Serializable]
  */
-class JsonCache<T : Any>(val path: Path, val serializer: KSerializer<T>) : Cache<T>() {
+class JsonCache<T : Any>(val path: Path, val serializer: KSerializer<T>, val io: FileIO) : Cache<T>() {
   override fun load(): T? {
     if (!path.exists()) return null
-    return commonSerde.decodeFromString(serializer, path.readText())
+    return commonSerde.decodeFromString(serializer, io.readText(path))
   }
   
   override fun save(value: T) {
     path.createParentDirectories()
-    path.writeText(commonSerde.encodeToString(serializer, value))
+    io.writeText(path, commonSerde.encodeToString(serializer, value))
   }
 }
 
@@ -62,16 +63,17 @@ abstract class KVCache<K, V : Any> {
   }
 }
 
-class DirJsonKVCache<K, V : Any>(val serializer: KSerializer<V>, val pathProvider: (K) -> Path) : KVCache<K, V>() {
+class DirJsonKVCache<K, V : Any>(val serializer: KSerializer<V>, val io: FileIO, val pathProvider: (K) -> Path) :
+  KVCache<K, V>() {
   override fun load(key: K): V? {
     val path = pathProvider(key)
-    if (!path.exists()) return null
-    return commonSerde.decodeFromString(serializer, path.readText())
+    if (!io.exists(path)) return null
+    return commonSerde.decodeFromString(serializer, io.readText(path))
   }
   
   override fun save(key: K, value: V) {
     val path = pathProvider(key)
     path.createParentDirectories()
-    path.writeText(commonSerde.encodeToString(serializer, value))
+    io.writeText(path, commonSerde.encodeToString(serializer, value))
   }
 }

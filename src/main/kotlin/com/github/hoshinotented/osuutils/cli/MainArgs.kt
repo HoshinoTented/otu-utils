@@ -36,13 +36,6 @@ abstract class MainArgs : Callable<Int> {
   @CommandLine.Option(names = ["-v", "--verbose"])
   var verbose: Boolean = false
   
-  @CommandLine.Option(
-    names = ["-o", "--output"],
-    paramLabel = "FILE",
-    description = ["Specify the output file/directory of actions"]
-  )
-  var output: File? = null
-  
   @CommandLine.Spec
   lateinit var commandSpec: CommandLine.Model.CommandSpec
   

@@ -5,20 +5,18 @@ package com.github.hoshinotented.osuutils.database
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.ScoreHistory
+import com.github.hoshinotented.osuutils.io.FileIO
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableMap
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.nio.file.Path
-import kotlin.io.path.exists
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
 /**
  * @param historyDir must exist
  */
-class ScoreHistoryDatabase(val historyDir: Path) {
+class ScoreHistoryDatabase(val historyDir: Path, val io: FileIO) {
   @Serializable
   data class TrackBeatmap(val id: BeatmapId, val comment: String?)
   
@@ -26,7 +24,7 @@ class ScoreHistoryDatabase(val historyDir: Path) {
     val beatmaps: ImmutableSeq<TrackBeatmap>,
   ) : AutoCloseable {
     override fun close() {
-      trackingMapsPath.writeText(commonSerde.encodeToString(beatmaps))
+      io.writeText(trackingMapsPath, commonSerde.encodeToString(beatmaps))
     }
   }
   
@@ -38,11 +36,11 @@ class ScoreHistoryDatabase(val historyDir: Path) {
   fun tracking(): TrackBeatmaps {
     if (::trackBeatmapsCache.isInitialized) return trackBeatmapsCache
     
-    if (!trackingMapsPath.exists()) {
+    if (!io.exists(trackingMapsPath)) {
       return TrackBeatmaps(ImmutableSeq.empty())
     }
     
-    val json = trackingMapsPath.readText()
+    val json = io.readText(trackingMapsPath)
     val data = commonSerde.decodeFromString(SeqSerializer(TrackBeatmap.serializer()), json)
     return TrackBeatmaps(data)
   }
@@ -52,17 +50,16 @@ class ScoreHistoryDatabase(val historyDir: Path) {
     if (cache != null) return cache
     
     val path = historyDir.resolve("$beatmapId.json")
-    if (!path.exists()) return ScoreHistory(beatmapId, ImmutableSeq.empty(), intArrayOf(), intArrayOf(), null)
+    if (!io.exists(path)) return ScoreHistory(beatmapId, ImmutableSeq.empty(), intArrayOf(), intArrayOf(), null)
     
-    val history = commonSerde.decodeFromString<ScoreHistory>(path.readText())
+    val history = commonSerde.decodeFromString<ScoreHistory>(io.readText(path))
     scoreHistoryCache.put(beatmapId, history)
     return history
   }
   
   fun save(history: ScoreHistory) {
     scoreHistoryCache.put(history.beatmapId, history)
-    historyDir.resolve("${history.beatmapId}.json")
-      .writeText(commonSerde.encodeToString(history))
+    io.writeText(historyDir.resolve("${history.beatmapId}.json"), commonSerde.encodeToString(history))
   }
   
   /**

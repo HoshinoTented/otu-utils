@@ -77,6 +77,13 @@ class CommandAnalyze() : Callable<Int> {
   )
   var showRecentUnplayed: Boolean = false
   
+  @CommandLine.Option(
+    names = ["-o", "--output"],
+    paramLabel = "FILE",
+    description = ["Specify the output file/directory of actions"]
+  )
+  var output: File? = null
+  
   override fun call(): Int = parent.catching {
     parent.cliLogger.info("Run 'analyze' with: showRecentUnplayed=$showRecentUnplayed")
     

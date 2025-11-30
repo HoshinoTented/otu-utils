@@ -7,6 +7,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
 import com.github.hoshinotented.osuutils.commonSerde
+import com.github.hoshinotented.osuutils.io.FileIO
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.SerialName
@@ -22,7 +23,7 @@ import kotlin.io.path.writeText
 /**
  * @param databaseDir must exist
  */
-class BeatmapDatabase(val databaseDir: Path) {
+class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
   val metadataPath: Path = databaseDir.resolve("metadata.json")
   
   @Serializable
@@ -34,7 +35,7 @@ class BeatmapDatabase(val databaseDir: Path) {
   
   inner class Metadata(val map: MutableMap<BeatmapId, BeatmapSetId>) : AutoCloseable {
     override fun close() {
-      metadataPath.writeText(commonSerde.encodeToString(map))
+      io.writeText(metadataPath, commonSerde.encodeToString(map))
     }
   }
   

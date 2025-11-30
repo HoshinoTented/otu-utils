@@ -24,6 +24,6 @@ data class AnalyzeMetadata(val lastId: Int, val records: ImmutableSeq<AnalyzeRec
     if (lastId + 1 != record.id)
       throw IllegalArgumentException("id doesn't match, expected ${lastId + 1}, but got ${record.id}")
     
-    return copy(lastId = record.id + 1, records = records.appended(record))
+    return copy(lastId = record.id, records = records.appended(record))
   }
 }
