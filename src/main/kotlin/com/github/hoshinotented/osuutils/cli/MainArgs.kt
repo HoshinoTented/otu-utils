@@ -11,6 +11,7 @@ import java.util.concurrent.Callable
     CommandAuth::class,
     CommandMe::class,
     CommandAnalyze::class,
+    CommandListAnalyze::class,
     CommandRollback::class,
     CommandRenderScores::class,
     CommandLine.HelpCommand::class

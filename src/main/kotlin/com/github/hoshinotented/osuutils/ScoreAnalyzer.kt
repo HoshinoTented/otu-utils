@@ -114,9 +114,13 @@ class ScoreAnalyzer(
    * @param fallbackSince used when no score in history, this is very useful when initializing a new history, such as don't import old scores
    */
   fun analyze(now: Instant, fallbackSince: Instant? = null): ImmutableSeq<AnalyzeReport> {
-    return histories.map {
-      val scores = application.beatmapScores(user, it.beatmapId)
-      analyze(now, it, scores, fallbackSince = fallbackSince)
+    // fetch all score before analyze, as fetching can fail, then we won't get inconsistent data
+    val scoreses = histories.map {
+      application.beatmapScores(user, it.beatmapId)
+    }
+    
+    return histories.zip(scoreses) { history, scores ->
+      analyze(now, history, scores, fallbackSince = fallbackSince)
     }
   }
   

@@ -6,12 +6,15 @@ import kala.collection.mutable.MutableList
 import kala.collection.mutable.MutableMap
 import org.jfree.chart.ChartFactory
 import org.jfree.chart.axis.SymbolAxis
+import org.jfree.chart.renderer.xy.XYItemRenderer
+import org.jfree.chart.util.ShapeUtils
 import org.jfree.data.DomainOrder
 import org.jfree.data.general.DatasetChangeListener
 import org.jfree.data.general.DatasetGroup
 import org.jfree.data.xy.XYDataset
 import java.awt.Color
 import java.awt.Font
+import java.awt.Shape
 import java.io.File
 import java.time.Instant
 import java.time.LocalDateTime
@@ -107,6 +110,9 @@ class RenderScoresAction(val outFile: File, val title: String, val userName: Str
     chart.xyPlot.domainAxis = SymbolAxis("date", dates.toArray(String::class.java)).apply {
       isGridBandsVisible = false
     }
+
+//    val renderer: XYItemRenderer? = chart.xyPlot.renderer
+//    renderer?.setSeriesShape(0, ShapeUtils.createTranslatedShape())
     
     chart.xyPlot.isDomainGridlinesVisible = false
     chart.xyPlot.rangeGridlinePaint = Color.gray

@@ -73,7 +73,7 @@ abstract class TestBase {
    * @return null if [beatmapId] is not a valid beatmap id
    */
   fun beatmap(beatmapId: BeatmapId): Beatmap? {
-    var beatmap = beatmapDatabase.load(beatmapId)
+    var beatmap = beatmapDatabase.loadMaybe(beatmapId)
     if (beatmap != null) return beatmap
     
     beatmap = application.beatmap(user, beatmapId)
@@ -88,7 +88,7 @@ abstract class TestBase {
   }
   
   fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
-    var set = beatmapDatabase.loadSet(beatmapSetId)
+    var set = beatmapDatabase.loadSetMaybe(beatmapSetId)
     if (set != null) return set
     
     set = application.beatmapSet(user, beatmapSetId)

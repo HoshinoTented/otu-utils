@@ -55,7 +55,7 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     }
   }
   
-  fun load(beatmapId: BeatmapId): Beatmap? {
+  fun loadMaybe(beatmapId: BeatmapId): Beatmap? {
     val setId = metadata().use {
       if (it.map.containsKey(beatmapId)) {
         it.map.getValue(beatmapId)
@@ -68,6 +68,11 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     } else null
   }
   
+  fun load(beatmapId: BeatmapId): Beatmap {
+    return loadMaybe(beatmapId)
+      ?: throw IllegalStateException("Unable to load beatmap $beatmapId from database, the database may be corrupted.")
+  }
+  
   fun save(map: Beatmap) {
     val setPath = databaseDir.resolve("${map.beatmapSetId}")
     if (!setPath.exists()) {
@@ -78,16 +83,19 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
       .writeText(commonSerde.encodeToString(map))
   }
   
-  fun loadSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
+  fun loadSetMaybe(beatmapSetId: BeatmapSetId): BeatmapSet? {
     val path = databaseDir.resolve("$beatmapSetId.json")
     if (!path.exists()) return null
     
     val thin = commonSerde.decodeFromString<ThinBeatmapSet>(path.readText())
-    val beatmaps = thin.beatmaps.map {
-      load(it) ?: throw IllegalStateException("Beatmap $it not found, database may be corrupted.")
-    }
+    val beatmaps = thin.beatmaps.map { load(it) }
     
     return BeatmapSet(thin.id, thin.title, thin.titleUnicode, beatmaps)
+  }
+  
+  fun loadSet(beatmapSetId: BeatmapSetId): BeatmapSet {
+    return loadSetMaybe(beatmapSetId)
+      ?: throw IllegalStateException("Unable to load beatmap set $beatmapSetId from database, the database may be corrupted.")
   }
   
   fun saveSet(set: BeatmapSet) {

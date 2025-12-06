@@ -59,7 +59,9 @@ class Main : MainArgs() {
   }
   
   internal fun app(): OsuApplication {
-    return appDB.load() ?: throw IllegalStateException("No osu application data is found")
+    return appDB.load()?.apply {
+      dontRefreshToken = noRefresh
+    } ?: throw IllegalStateException("No osu application data is found")
   }
 }
 

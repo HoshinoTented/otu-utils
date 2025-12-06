@@ -24,5 +24,7 @@ enum class Type {
 
 // in the same order as mod select panel, top to bottom and left to right
 enum class Mod {
-  EZ, NF, HT, HR, DT, HD, FL
+  EZ, NF, HT,
+  HR, SD, DT, HD, FL,
+  SO,
 }

@@ -115,7 +115,11 @@ class AnalyzeAction(
       
       if (ids.isNotEmpty() && ids.last() == analyzeId) {
         val index = it.groups.last()
-        val newHistory = it.copy(scores = it.scores.slice(0, index), groups = it.groups.copyOf(it.groups.size - 1))
+        val newHistory = it.copy(
+          scores = it.scores.slice(0, index),
+          groups = it.groups.copyOf(it.groups.size - 1),
+          analyzeIds = it.analyzeIds.copyOf(it.analyzeIds.size - 1)
+        )
         historyProvider.historyDB.save(newHistory)
         val firstScoreInGroup = it.scores.get(index)
         println("Removed all scores since " + prettyTime(firstScoreInGroup.createdAt))

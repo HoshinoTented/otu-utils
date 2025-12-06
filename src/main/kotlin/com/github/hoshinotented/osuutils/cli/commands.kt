@@ -2,13 +2,13 @@ package com.github.hoshinotented.osuutils.cli
 
 import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.Users
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.cli.action.AnalyzeAction
 import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import picocli.CommandLine
 import java.io.File
+import java.lang.IllegalStateException
 import java.util.concurrent.Callable
 import kotlin.io.writeText
 
@@ -103,7 +103,37 @@ class CommandAnalyze() : Callable<Int> {
     
     return 0
   }
+}
+
+@CommandLine.Command(name = "list-analyze", description = ["List all tracking beatmaps"])
+class CommandListAnalyze() : Callable<Int> {
+  @CommandLine.ParentCommand
+  lateinit var parent: Main
   
+  override fun call(): Int = parent.catching {
+    val tracking = scoreHistoryDB.tracking()
+    if (tracking.beatmaps.isEmpty) {
+      println("No beatmap are tracked currently.")
+    } else {
+      var allSuccess = true
+      tracking.beatmaps.forEach {
+        val map = mapDB.loadMaybe(it.id)
+        if (map == null) {
+          allSuccess = false
+          System.err.println("Unable to load ${it.id} from database, please run 'analyze' to fetch beatmap information.")
+          return@forEach
+        }
+        
+        val set = mapDB.loadSet(map.beatmapSetId)
+        println("Beatmap[${it.id}]: ${prettyBeatmap(set, map)}")
+        println("Comment: ${it.comment ?: "no comment"}")
+      }
+      
+      if (allSuccess) 0 else 1
+    }
+    
+    0
+  }
 }
 
 @CommandLine.Command(name = "rollback", description = ["Delete scores by last analyze"])
@@ -135,9 +165,9 @@ class CommandRenderScores() : Callable<Int> {
     val user = user()
     val db = scoreHistoryDB
     val scores = db.load(beatmapId)
-    val map = mapDB.load(beatmapId)
+    val map = mapDB.loadMaybe(beatmapId)
       ?: throw Exception("No local beatmap data for beatmap: $beatmapId.")
-    val set = mapDB.loadSet(map.beatmapSetId)
+    val set = mapDB.loadSetMaybe(map.beatmapSetId)
       ?: throw Exception("No local beatmap set data for beatmap: $beatmapId, database might be corrupted.")
     val title = prettyBeatmap(set, map)
     

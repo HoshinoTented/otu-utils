@@ -15,7 +15,7 @@ class BeatmapProvider(val application: OsuApplication, val user: User, val datab
    * @return null if no such beatmap
    */
   fun beatmap(beatmapId: BeatmapId): Beatmap? {
-    var beatmap = database.load(beatmapId)
+    var beatmap = database.loadMaybe(beatmapId)
     if (beatmap != null) return beatmap
     
     beatmap = application.beatmap(user, beatmapId)
@@ -30,7 +30,7 @@ class BeatmapProvider(val application: OsuApplication, val user: User, val datab
   }
   
   fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
-    var set = database.loadSet(beatmapSetId)
+    var set = database.loadSetMaybe(beatmapSetId)
     if (set != null) return set
     
     set = application.beatmapSet(user, beatmapSetId)
