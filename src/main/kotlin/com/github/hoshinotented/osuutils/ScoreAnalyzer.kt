@@ -124,6 +124,9 @@ class ScoreAnalyzer(
     }
   }
   
+  /**
+   * Produce an [AnalyzeReport] from given [scores] and [history]. This function is pure.
+   */
   fun analyze(
     now: Instant,
     history: ScoreHistory,

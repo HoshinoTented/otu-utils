@@ -10,6 +10,7 @@ jline = "3.30.0"
 picocli = "4.7.7"
 chart-fx = "11.3.1"
 jfreechart = "1.5.6"
+guava = "33.5.0-jre"
 
 kotlinx = "1.9.0"
 
@@ -29,3 +30,5 @@ jfreechart = { group = "org.jfree", name = "jfreechart", version.ref = "jfreecha
 jline = { group = "org.jline", name = "jline", version.ref = "jline" }
 picocli = { group = "info.picocli", name = "picocli", version.ref = "picocli" }
 picocli-codegen = { group = "info.picocli", name = "picocli-codegen", version.ref = "picocli" }
+
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }

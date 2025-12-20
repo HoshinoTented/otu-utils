@@ -1,5 +1,6 @@
 import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
+import com.github.hoshinotented.osuutils.io.DefaultFileIO
 import org.jfree.data.DomainOrder
 import org.jfree.data.general.DatasetChangeListener
 import org.jfree.data.general.DatasetGroup
@@ -92,7 +93,7 @@ fun main() {
 //  val what = chart.createBufferedImage(640, 480)
 //  ImageIO.write(what, "png", Path("out.png").toFile())
   
-  val scoreDb = ScoreHistoryDatabase(Path("./src/test/resources/beatmap_histories"))
+  val scoreDb = ScoreHistoryDatabase(Path("./src/test/resources/beatmap_histories"), DefaultFileIO)
   RenderScoresAction(Path("out.png").toFile(), "Scores of 181253", "Hoshino Tented", scoreDb.load(181253).scores)
     .run()
 }
