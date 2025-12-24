@@ -3,12 +3,11 @@
 
 package com.github.hoshinotented.osuutils.osudb
 
+import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
+import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.api.endpoints.UserId
 import kala.collection.immutable.ImmutableSeq
-import kala.collection.mutable.FreezableMutableList
-import java.io.ByteArrayInputStream
-import java.io.DataInputStream
-import java.lang.RuntimeException
-import java.nio.charset.Charset
 import kotlin.time.Instant
 
 annotation class Padding(val bytes: Int)
@@ -17,8 +16,11 @@ class OsuParseException(msg: String) : RuntimeException(msg)
 
 data class IntFloatPair(val int: Int, val float: Float)
 
+data class ModStarCache(val mods: ImmutableSeq<Mod>, val difficulty: Float)
+
 data class TimePoint(val bpm: Double, val offset: Double, val inherit: Boolean)
 
+// WTF so there is no star rate cache?
 data class LocalBeatmap(
   val artist: String,
   val artistUnicode: String?,
@@ -33,22 +35,22 @@ data class LocalBeatmap(
   val circleAmount: Short,
   val sliderAmount: Short,
   val spinnerAmount: Short,
-  val lastModified: Long,   // windows ticks
+  val lastModified: Instant,
   val ar: Float,
   val cs: Float,
   val hp: Float,
-  val difficulty: Float,
+  val od: Float,
   val sliderVelocity: Double,
-  val stdModdedStarCache: ImmutableSeq<IntFloatPair>,
-  val taikoModdedStarCache: ImmutableSeq<IntFloatPair>,
-  val ctbModdedStarCache: ImmutableSeq<IntFloatPair>,
-  val maniaModdedStarCache: ImmutableSeq<IntFloatPair>,
+  val stdModdedStarCache: ImmutableSeq<ModStarCache>,
+  val taikoModdedStarCache: ImmutableSeq<ModStarCache>,
+  val ctbModdedStarCache: ImmutableSeq<ModStarCache>,
+  val maniaModdedStarCache: ImmutableSeq<ModStarCache>,
   val drainTimeSeconds: Int,
   val totalTimeMilliseconds: Int,
   val someMysteryTimeWhichIDontKnowInMilliseconds: Int,
   val timePoints: ImmutableSeq<TimePoint>,
-  val difficultyId: Int,
   val beatmapId: Int,
+  val beatmapSetId: Int,
   val threadId: Int,
   val stdGrade: Byte,
   val taikoGrade: Byte,
@@ -62,10 +64,10 @@ data class LocalBeatmap(
   val onlineOffset: Short,
   val titleFont: String,
   val unplayed: Boolean,
-  val lastTimePlayed: Long,
+  val lastTimePlayed: Instant,
   val isOsz2: Boolean,
   val folderName: String,
-  val lastTimeChecked: Long,
+  val lastTimeChecked: Instant,
   val ignoreSound: Boolean,
   val ignoreSkin: Boolean,
   val disableStoryboard: Boolean,
@@ -76,20 +78,18 @@ data class LocalBeatmap(
   val maniaScrollSpeed: Byte,
 ) {
   companion object {
-    const val RANKED_STATUS_UNKNOWN: Byte = 0
-    const val RANKED_STATUS_UNSUBMITTED: Byte = 1
-    const val RANKED_STATUS_GRAVEYARD: Byte = 2
-    const val RANKED_STATUS_UNUSED: Byte = 3
-    const val RANKED_STATUS_RANKED: Byte = 4
-    const val RANKED_STATUS_APPROVED: Byte = 5
-    const val RANKED_STATUS_QUALIFIED: Byte = 6
-    const val RANKED_STATUS_LOVED: Byte = 7
+    enum class RankedStatus {
+      Unknown, Unsubmitted, Graveyard, Unused, Ranked, Approved, Qualified, Loved
+    }
     
-    const val GAMEPLAY_MODE_STD = 0
-    const val GAMEPLAY_MODE_TAIKO = 1
-    const val GAMEPLAY_MODE_CTB = 2
-    const val GAMEPLAY_MODE_MANIA = 3
+    enum class GameplayMode {
+      Std, Taiko, Ctb, Mania
+    }
   }
+  
+  fun toBeatmap(): Beatmap = Beatmap(
+    beatmapSetId.toLong(), beatmapId.toLong(), 0.0F, difficultyName
+  )
 }
 
 data class LocalOsu(
@@ -104,15 +104,64 @@ data class LocalOsu(
   val userPermission: Int,
 ) {
   companion object {
-    const val PERMISSION_NORMAL: Int = 0b1
-    const val PERMISSION_MODERATOR: Int = 0b10
-    const val PERMISSION_SUPPORTER: Int = 0b100
-    const val PERMISSION_FRIEND: Int = 0b1000
-    const val PERMISSION_PEPPY: Int = 0b10000   // ??
-    const val PERMISSION_STAFF: Int = 0b100000
+    enum class Permission {
+      Normal, Moderator, Supporter, Friend, Who, Staff
+    }
   }
 }
 
-fun parseOsu(bytes: ByteArrayInputStream) {
-
+data class LocalScore(
+  val gameplayMode: Byte,
+  val version: Int,
+  val beatmapMd5Hash: String,
+  val playerName: String,
+  val replayMd5Hash: String,
+  // 300
+  val greatAmount: Short,
+  // 100
+  val okAmout: Short,
+  // 50
+  val mehAmount: Short,
+  // blue 激 in std, max 300 in mania
+  val gekisAmount: Short,
+  // green 喝 in std, 200 in mania
+  val katusAmount: Short,
+  val missAmount: Short,
+  val score: Int,
+  val maxCombo: Short,
+  val isPFC: Boolean,
+  val mods: Int,
+  // a string that always empty
+  val _unused0: String?,
+  val createTime: Instant,   // windows ticks
+  // always -1
+  val _unused1: Int,
+  val scoreId: Long,
+//  val someLazerShit: Double,
+) {
+  /**
+   * @param beatmapProvider find [Beatmap] by md5 hash
+   */
+  fun toScore(userId: UserId, beatmapProvider: (String) -> Beatmap?): Score {
+    // unfortunately we only consider osu!std, thus only 300, 100, 50 and miss involve acc calculation
+    val noteCounts = greatAmount.toInt() + okAmout.toInt() + mehAmount.toInt() + missAmount.toInt()
+    val b = noteCounts * 6    // 1 for 50, 2 for 100, and 6 for 300
+    val a = greatAmount.toInt() * 6 + okAmout.toInt() * 2 + mehAmount.toInt()
+    val acc = a.toFloat() / b
+    
+    return Score(
+      acc, createTime,
+      scoreId, Mod.from(mods), userId,
+      beatmapProvider(beatmapMd5Hash),
+      null,
+      null
+    )
+  }
 }
+
+data class LocalScoredBeatmap(val md5Hash: String, val scores: ImmutableSeq<LocalScore>)
+
+data class LocalScores(
+  val version: Int,
+  val scoredBeatmaps: ImmutableSeq<LocalScoredBeatmap>,
+)

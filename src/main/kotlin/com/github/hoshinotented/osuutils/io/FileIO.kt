@@ -1,5 +1,6 @@
 package com.github.hoshinotented.osuutils.io
 
+import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.logging.Logger

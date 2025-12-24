@@ -7,27 +7,27 @@ import com.github.hoshinotented.osuutils.data.AnalyzeRecord
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.AnalyzeDatabase
-import com.github.hoshinotented.osuutils.database.BeatmapDatabase
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyTime
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
 import com.github.hoshinotented.osuutils.providers.ScoreHistoryProvider
+import com.github.hoshinotented.osuutils.providers.ScoreProvider
 import kala.collection.mutable.MutableList
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 class AnalyzeAction(
-  val application: OsuApplication,
+  application: OsuApplication,
   val user: User,
   val analyzeDatabase: AnalyzeDatabase,
   historyDatabase: ScoreHistoryDatabase,
-  beatmapDatabase: BeatmapDatabase,
+  val beatmapProvider: BeatmapProvider,
+  val scoreProvider: ScoreProvider,
   val options: Options = Options(false),
 ) {
   data class Options(val showRecentUnplayed: Boolean)
   
-  val beatmapProvider = BeatmapProvider(application, user, beatmapDatabase)
   val historyProvider = ScoreHistoryProvider(application, user, historyDatabase)
   
   fun analyze(): String {
@@ -36,11 +36,18 @@ class AnalyzeAction(
     val histories = historyProvider.histories()
     val analyzeId = analyzeDatabase.load().lastId + 1
     
-    val analyzer = ScoreAnalyzer(application, user, histories, analyzeId)
+    val scores = histories.map {
+      scoreProvider.beatmapScores(user, it.beatmapId)
+        ?: throw IllegalArgumentException("No such beatmap ${it.beatmapId}, make sure you have correct beatmap id in the tracking list.")
+    }
+    
+    val analyzer = ScoreAnalyzer(histories, scores, analyzeId)
     val now = Clock.System.now()
     val reports = analyzer.analyze(now, now - 30.days)
     val unplayed = MutableList.create<ScoreHistory>()
     val analyzeRecord = AnalyzeRecord(analyzeId, now)
+    
+    // TODO: maybe we can save data after a report generation? cause report generation may fail
     analyzeDatabase.save(analyzeDatabase.load().addRecord(analyzeRecord))
     
     reports.forEachIndexed { idx, report ->

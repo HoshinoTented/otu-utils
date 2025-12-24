@@ -1,5 +1,8 @@
 package com.github.hoshinotented.osuutils.api.endpoints
 
+import kala.collection.immutable.ImmutableSeq
+import kala.collection.mutable.FreezableMutableList
+
 enum class Mode {
   Osu;
   
@@ -22,9 +25,40 @@ enum class Type {
   }
 }
 
-// in the same order as mod select panel, top to bottom and left to right
+// see https://osu.ppy.sh/wiki/en/Client/File_formats/osr_%28file_format%29
+// the ordinal is bit offset
 enum class Mod {
-  EZ, NF, HT,
-  HR, SD, DT, HD, FL,
-  SO,
+  NF, EZ, TD,
+  HD, HR, SD, DT,
+  RX, HT, NC,
+  FL, AT, SO, RX2,
+  PF,   // perfect
+  
+  // mania
+  K4, K5, K6, K7, K8,
+  FI,   // fade in
+  RD,   // random
+  CN,   // cinema
+  TP,   // target practice, osu!cutting edge only
+  K9,   // mania
+  CP,   // coop
+  K1, K3, K2,   // still mania
+  V2,   // score v2
+  MR;   // mirror
+  
+  companion object {
+    fun from(bits: Int): ImmutableSeq<Mod> {
+      val result = FreezableMutableList.create<Mod>()
+      
+      for (mod in entries) {
+        val mask = 1 shl mod.ordinal
+        val bit = bits and mask
+        if (bit != 0) {
+          result.append(mod)
+        }
+      }
+      
+      return result.toSeq()
+    }
+  }
 }

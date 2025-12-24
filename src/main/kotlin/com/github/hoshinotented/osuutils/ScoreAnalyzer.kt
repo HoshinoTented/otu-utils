@@ -14,11 +14,16 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 class ScoreAnalyzer(
-  val application: OsuApplication,
-  val user: User,
   val histories: ImmutableSeq<ScoreHistory>,
+  val scores: ImmutableSeq<ImmutableSeq<Score>>,
   val analyzeId: Int,
 ) {
+  init {
+    if (!histories.sizeEquals(scores)) {
+      throw AssertionError("Size doesn't match")
+    }
+  }
+  
   /**
    * @param history new history with new scores added, if [playCount] == 0, then this is the original history
    * @param report null if [playCount] is `0`
@@ -114,12 +119,7 @@ class ScoreAnalyzer(
    * @param fallbackSince used when no score in history, this is very useful when initializing a new history, such as don't import old scores
    */
   fun analyze(now: Instant, fallbackSince: Instant? = null): ImmutableSeq<AnalyzeReport> {
-    // fetch all score before analyze, as fetching can fail, then we won't get inconsistent data
-    val scoreses = histories.map {
-      application.beatmapScores(user, it.beatmapId)
-    }
-    
-    return histories.zip(scoreses) { history, scores ->
+    return histories.zip(scores) { history, scores ->
       analyze(now, history, scores, fallbackSince = fallbackSince)
     }
   }

@@ -42,13 +42,19 @@ abstract class MainArgs : Callable<Int> {
   
   @CommandLine.Option(
     names = ["--dry-run"],
-    description = ["[NOT IMPLEMENTED] Don't update almost anything to disk (except user token, cause this is very important)"]
+    description = ["Don't update almost any data to disk (except user token cause this is very important, '-o' still work)"]
   )
   var dryRun: Boolean = false
   
   @CommandLine.Option(
     names = ["--no-refresh"],
-    description = ["[NOT IMPLEMENTED] Don't refresh user token and fail when user token is expired, usually used with --dry-run"]
+    description = ["Don't refresh user token and fail when user token is expired, usually used with --dry-run"]
   )
   var noRefresh: Boolean = false
+  
+  @CommandLine.Option(
+    names = ["--prefer-local"],
+    description = ["Fetch data from local osu database if possible, 'local_osu_path' in application.json must be set."]
+  )
+  var preferLocal: Boolean = false
 }

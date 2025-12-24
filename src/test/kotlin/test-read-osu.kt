@@ -1,5 +1,8 @@
 import com.github.hoshinotented.osuutils.osudb.LocalOsu
+import com.github.hoshinotented.osuutils.osudb.LocalOsuParseListener
+import com.github.hoshinotented.osuutils.osudb.LocalScores
 import com.github.hoshinotented.osuutils.osudb.parse
+import com.github.hoshinotented.osuutils.osudb.parseLocalOsu
 import com.google.common.io.LittleEndianDataInputStream
 import kotlin.io.path.Path
 import kotlin.io.path.inputStream
@@ -11,9 +14,16 @@ class ReadOsuTest {
   val osuPath = Path(System.getenv("OSU_HOME"))
   
   @Test
-  fun test() {
+  fun testOsu() {
     val `in` = LittleEndianDataInputStream(osuPath.resolve("osu!.db").inputStream())
-    val osu = parse(LocalOsu::class.createType(), `in`)
+    val osu = parseLocalOsu(`in`, LocalOsuParseListener.Console)
+    return
+  }
+  
+  @Test
+  fun testScores() {
+    val `in` = LittleEndianDataInputStream(osuPath.resolve("scores.db").inputStream())
+    val scores = parse(LocalScores::class, `in`)
     return
   }
 }

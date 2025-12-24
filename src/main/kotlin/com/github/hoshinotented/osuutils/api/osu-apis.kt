@@ -36,6 +36,7 @@ data class OsuApplication(
   @SerialName("client_id") val clientId: Int,
   @SerialName("client_secret") val clientSecret: String,
   @SerialName("redirect_uri") val redirectUri: String,
+  @SerialName("local_osu_path") val localOsuPath: String?,
 ) {
   @Transient
   var dontRefreshToken = false

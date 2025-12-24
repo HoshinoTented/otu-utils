@@ -3,17 +3,21 @@ package com.github.hoshinotented.osuutils
 import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import kala.collection.mutable.MutableEnumSet
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.EnumSet
 import java.util.Locale
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 fun prettyBeatmap(set: BeatmapSet, map: Beatmap): String {
   return "${set.titleUnicode} / ${map.version} / ${Beatmap.prettyDifficulty(map.difficulty)}"
+}
+
+fun prettyBeatmap(local: LocalBeatmap): String {
+  return "${local.titleUnicode ?: local.title} / ${local.difficultyName} / ${Beatmap.prettyDifficulty(local.od)}"
 }
 
 fun prettyTime(time: Instant): String {

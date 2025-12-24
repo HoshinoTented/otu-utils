@@ -8,7 +8,6 @@ import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import picocli.CommandLine
 import java.io.File
-import java.lang.IllegalStateException
 import java.util.concurrent.Callable
 import kotlin.io.writeText
 
@@ -90,7 +89,15 @@ class CommandAnalyze() : Callable<Int> {
     val user = user()
     val app = app()
     val action =
-      AnalyzeAction(app, user, analyzeMetadataDB, scoreHistoryDB, mapDB, AnalyzeAction.Options(showRecentUnplayed))
+      AnalyzeAction(
+        app,
+        user,
+        analyzeMetadataDB,
+        scoreHistoryDB,
+        beatmapProvider,
+        scoreProvider,
+        AnalyzeAction.Options(showRecentUnplayed)
+      )
     val analResult = action.analyze()
     val output = output
     
@@ -98,6 +105,7 @@ class CommandAnalyze() : Callable<Int> {
       println(analResult)
     } else {
       // do not check parent directory, it's user's fault
+      // don't use io, only io for database part
       output.writeText(analResult)
     }
     
@@ -144,7 +152,7 @@ class CommandRollback() : Callable<Int> {
   override fun call(): Int = parent.catching {
     val user = user()
     val app = app()
-    val action = AnalyzeAction(app, user, analyzeMetadataDB, scoreHistoryDB, mapDB)
+    val action = AnalyzeAction(app, user, analyzeMetadataDB, scoreHistoryDB, beatmapProvider, scoreProvider)
     action.removeLastAnalyze(null)
     return 0
   }

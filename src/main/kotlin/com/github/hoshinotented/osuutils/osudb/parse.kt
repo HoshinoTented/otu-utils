@@ -1,14 +1,17 @@
 package com.github.hoshinotented.osuutils.osudb
 
+import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
 import kala.collection.mutable.MutableMap
 import java.nio.charset.Charset
-import java.util.function.Consumer
+import kotlin.math.floor
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Instant
 
@@ -66,7 +69,7 @@ object Deserializers {
       ): ImmutableSeq<*> {
         val elemTyProj = typeArgs[0]
         val elemTy = elemTyProj.type ?: throw IllegalArgumentException("Unable to decode a star type")
-        return bytes.readMany { parse(elemTy, this) }
+        return bytes.readMany { _, _ -> parse(elemTy, this) }
       }
     })
     
@@ -85,6 +88,17 @@ object Deserializers {
         bytes: LittleEndianDataInputStream,
       ): Instant {
         return bytes.readDateTime()
+      }
+    })
+    
+    
+    register(ModStarCache::class, object : Deserializer<ModStarCache> {
+      override fun decode(
+        typeArgs: List<KTypeProjection>,
+        bytes: LittleEndianDataInputStream,
+      ): ModStarCache {
+        var pair = bytes.readIntFloatPair()
+        return ModStarCache(Mod.from(pair.int), pair.float)
       }
     })
   }
@@ -117,13 +131,14 @@ fun LittleEndianDataInputStream.readIntFloatPair(): IntFloatPair {
 
 /**
  * Read many [R] from current stream, the next [Int] must indicates the number of [R]
+ * First parameter is index, the second is beatmap count.
  */
-fun <R> LittleEndianDataInputStream.readMany(builder: LittleEndianDataInputStream.() -> R): ImmutableSeq<R> {
+fun <R> LittleEndianDataInputStream.readMany(builder: LittleEndianDataInputStream.(Int, Int) -> R): ImmutableSeq<R> {
   val many = readInt()
   val buffer = FreezableMutableList.create<R>()
   
   for (i in 0 until many) {
-    buffer.append(builder())
+    buffer.append(builder(i, many))
   }
   
   return buffer.freeze()
@@ -131,9 +146,7 @@ fun <R> LittleEndianDataInputStream.readMany(builder: LittleEndianDataInputStrea
 
 fun LittleEndianDataInputStream.readDateTime(): Instant {
   val ticks = readLong()
-  // 1 ticks = 100 nano seconds
-  // 1 milliseconds = 10000 ticks
-  return Instant.fromEpochMilliseconds(ticks / 10000)
+  return fromWindowsTicks(ticks)
 }
 
 fun LittleEndianDataInputStream.readString(): String? {
@@ -171,6 +184,11 @@ fun LittleEndianDataInputStream.readULEB128(): ULong {
   return result
 }
 
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> parse(type: KClass<T>, bytes: LittleEndianDataInputStream): T? {
+  return parse(type.createType(), bytes) as T?
+}
+
 fun parse(type: KType, bytes: LittleEndianDataInputStream): Any? {
   // pre parse
   val clazz = type.classifier ?: throw IllegalArgumentException("null")
@@ -194,4 +212,60 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream): Any? {
   }
   
   return primeCon.call(*args)
+}
+
+interface LocalOsuParseListener {
+  /**
+   * If you want to interrupt the procedure, just throw an exception
+   *
+   * @param index the index of beatmap, or how many beatmap have been parsed
+   */
+  fun beforeParseBeatmap(index: Int, max: Int)
+  fun afterParseBeatmap(index: Int, max: Int, beatmap: LocalBeatmap)
+  
+  companion object Console : LocalOsuParseListener {
+    override fun beforeParseBeatmap(index: Int, max: Int) {}
+    override fun afterParseBeatmap(index: Int, max: Int, beatmap: LocalBeatmap) {
+      // max >= (index + 1) and index >= 0, thus max never 0
+      val indexPlus1 = index + 1
+      val barCount = floor((indexPlus1.toDouble() / max) * 20).toInt()
+      print("[ $indexPlus1 / $max ] |")
+      
+      for (i in 0 until 20) {
+        if (i < barCount) {
+          print('=')
+        } else {
+          print(' ')
+        }
+      }
+      
+      print("| ${prettyBeatmap(beatmap)} \r")
+    }
+  }
+}
+
+fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseListener): LocalOsu {
+  val version = bytes.readInt()
+  val folderCount = bytes.readInt()
+  val unlocked = bytes.readBoolean()
+  val unlockedTime = bytes.readDateTime()
+  val playerName = bytes.readString()!!
+  val beatmaps = bytes.readMany { idx, max ->
+    listener.beforeParseBeatmap(idx, max)
+    val beatmap = parse(LocalBeatmap::class, this)!!
+    listener.afterParseBeatmap(idx, max, beatmap)
+    beatmap
+  }
+  
+  val permission = bytes.readInt()
+  
+  return LocalOsu(version, folderCount, unlocked, unlockedTime, playerName, beatmaps, permission)
+}
+
+private const val UNIX_EPOCH_MILLISECONDS = 62135596800000L
+
+fun fromWindowsTicks(ticks: Long): Instant {
+  // 10000 windows ticks = 1 milliseconds
+  // 0 windows ticks is 0001-01-01T00:00:00.000Z, so we subtract [UNIX_EPOCH_MILLISECONDS]
+  return Instant.fromEpochMilliseconds(ticks / 10000L - UNIX_EPOCH_MILLISECONDS)
 }

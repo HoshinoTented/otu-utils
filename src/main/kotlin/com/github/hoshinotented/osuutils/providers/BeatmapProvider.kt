@@ -9,34 +9,83 @@ import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.BeatmapDatabase
+import com.github.hoshinotented.osuutils.osudb.LocalOsu
 
-class BeatmapProvider(val application: OsuApplication, val user: User, val database: BeatmapDatabase) {
-  /**
-   * @return null if no such beatmap
-   */
-  fun beatmap(beatmapId: BeatmapId): Beatmap? {
-    var beatmap = database.loadMaybe(beatmapId)
-    if (beatmap != null) return beatmap
-    
-    beatmap = application.beatmap(user, beatmapId)
-    if (beatmap == null) return null
-    
-    // we don't save this beatmap, but instead the beatmap set
-    val set = application.beatmapSet(user, beatmap.beatmapSetId)
-      ?: throw AssertionError("What do you mean a map is not belongs to its beatmap set??")
-    
-    database.saveSet(set)
-    return beatmap
+interface BeatmapProvider {
+  fun beatmap(beatmapId: BeatmapId): Beatmap?
+  fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet?
+  
+  fun or(other: BeatmapProvider): BeatmapProvider = ChainedBeatmapProvider(this, other)
+}
+
+class OnlineBeatmapProvider(val application: OsuApplication, val user: User) : BeatmapProvider {
+  override fun beatmap(beatmapId: BeatmapId): Beatmap? {
+    return application.beatmap(user, beatmapId)
   }
   
-  fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
-    var set = database.loadSetMaybe(beatmapSetId)
-    if (set != null) return set
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
+    return application.beatmapSet(user, beatmapSetId)
+  }
+}
+
+class CacheBeatmapProvider(val delegate: BeatmapProvider, val db: BeatmapDatabase) : BeatmapProvider {
+  override fun beatmap(beatmapId: BeatmapId): Beatmap? {
+    val result = delegate.beatmap(beatmapId)
+    if (result != null) {
+      val set = delegate.beatmapSet(result.beatmapSetId)
+        ?: throw AssertionError("What do you mean a map is not belongs to its beatmap set??")
+      
+      db.saveSet(set)
+    }
     
-    set = application.beatmapSet(user, beatmapSetId)
-    if (set == null) return null
-    
-    database.saveSet(set)
-    return set
+    return result
+  }
+  
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
+    return delegate.beatmapSet(beatmapSetId)?.also {
+      db.saveSet(it)
+    }
+  }
+}
+
+class LocalBeatmapProvider(val db: BeatmapDatabase) : BeatmapProvider {
+  override fun beatmap(beatmapId: BeatmapId): Beatmap? {
+    return db.loadMaybe(beatmapId)
+  }
+  
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
+    return db.loadSetMaybe(beatmapSetId)
+  }
+}
+
+// It is not recommended to use this provider, as beatmaps from local don't have star rate information
+class LocalOsuBeatmapProvider(osu: LocalOsu) : BeatmapProvider {
+  private val byBeatmapId = osu.beatmaps.associateBy { it.beatmapId }
+  private val byBeatmapSetId = osu.beatmaps.groupBy { it.beatmapSetId }
+  
+  override fun beatmap(beatmapId: BeatmapId): Beatmap? {
+    return byBeatmapId.getOrNull(beatmapId.toInt())?.toBeatmap()
+  }
+  
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
+    return byBeatmapSetId[beatmapSetId.toInt()]?.let {
+      val any = it.first()    // never empty
+      BeatmapSet(any.beatmapSetId.toLong(), any.title, any.titleUnicode ?: any.title, null)
+    }
+  }
+}
+
+fun BeatmapProviderImpl(application: OsuApplication, user: User, database: BeatmapDatabase): BeatmapProvider {
+  return LocalBeatmapProvider(database)
+    .or(CacheBeatmapProvider(OnlineBeatmapProvider(application, user), database))
+}
+
+class ChainedBeatmapProvider(val left: BeatmapProvider, val right: BeatmapProvider) : BeatmapProvider {
+  override fun beatmap(beatmapId: BeatmapId): Beatmap? {
+    return left.beatmap(beatmapId) ?: right.beatmap(beatmapId)
+  }
+  
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
+    return left.beatmapSet(beatmapSetId) ?: right.beatmapSet(beatmapSetId)
   }
 }
