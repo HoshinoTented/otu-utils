@@ -170,6 +170,7 @@ fun processEndpointRequest(request: Any): HttpRequest.Builder {
   val map = result.pathReferenced
   val data = result.data
   
+  // TODO: remove tailing '/'? this is possible when the last component is path argument and it is null.
   val rebuiltPath = EndpointComponent.rebuild(components) {
     serialize(request, map[it], bodyType) ?: ""   // basically only the last path argument is nullable
   }

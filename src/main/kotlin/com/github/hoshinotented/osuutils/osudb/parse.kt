@@ -2,12 +2,15 @@ package com.github.hoshinotented.osuutils.osudb
 
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.prettyBeatmap
+import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
 import kala.collection.mutable.MutableMap
 import java.nio.charset.Charset
-import kotlin.math.floor
+import java.nio.file.Path
+import kotlin.io.path.inputStream
+import kotlin.io.path.listDirectoryEntries
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -101,6 +104,14 @@ object Deserializers {
         return ModStarCache(Mod.from(pair.int), pair.float)
       }
     })
+    
+    register(ByteArray::class, object : Deserializer<ByteArray> {
+      override fun decode(typeArgs: List<KTypeProjection>, bytes: LittleEndianDataInputStream): ByteArray? {
+        val length = bytes.readInt()
+        if (length == -1) return null
+        return bytes.readNBytes(length)
+      }
+    })
   }
   
   fun <T : Any> register(clazz: KClass<T>, deserializer: Deserializer<T>) {
@@ -147,6 +158,17 @@ fun <R> LittleEndianDataInputStream.readMany(builder: LittleEndianDataInputStrea
 fun LittleEndianDataInputStream.readDateTime(): Instant {
   val ticks = readLong()
   return fromWindowsTicks(ticks)
+}
+
+fun LittleEndianDataInputStream.skipString() {
+  val indicator = this.read()
+  if (indicator == 0x00) return
+  if (indicator != 0x0B) throw OsuParseException("Illegal format, unexpected byte: 0x${indicator.toHexString()}")
+  
+  val ulength = readULEB128()
+  if (ulength > Int.MAX_VALUE.toULong()) throw OsuParseException("String too long: $ulength")
+  val length = ulength.toInt()
+  skipBytes(length)
 }
 
 fun LittleEndianDataInputStream.readString(): String? {
@@ -223,23 +245,22 @@ interface LocalOsuParseListener {
   fun beforeParseBeatmap(index: Int, max: Int)
   fun afterParseBeatmap(index: Int, max: Int, beatmap: LocalBeatmap)
   
-  companion object Console : LocalOsuParseListener {
-    override fun beforeParseBeatmap(index: Int, max: Int) {}
-    override fun afterParseBeatmap(index: Int, max: Int, beatmap: LocalBeatmap) {
-      // max >= (index + 1) and index >= 0, thus max never 0
-      val indexPlus1 = index + 1
-      val barCount = floor((indexPlus1.toDouble() / max) * 20).toInt()
-      print("[ $indexPlus1 / $max ] |")
-      
-      for (i in 0 until 20) {
-        if (i < barCount) {
-          print('=')
-        } else {
-          print(' ')
-        }
+  class Console : LocalOsuParseListener {
+    companion object {
+      const val TITLE = "Loading Beatmaps"
+    }
+    
+    private var first: Boolean = false
+    
+    override fun beforeParseBeatmap(index: Int, max: Int) {
+      if (!first) {
+        first = true
+        ProgressIndicator.Console.progress(index + 1, max, TITLE, null)
       }
-      
-      print("| ${prettyBeatmap(beatmap)} \r")
+    }
+    
+    override fun afterParseBeatmap(index: Int, max: Int, beatmap: LocalBeatmap) {
+      ProgressIndicator.Console.progress(index + 1, max, TITLE, prettyBeatmap(beatmap))
     }
   }
 }
@@ -260,6 +281,28 @@ fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseLis
   val permission = bytes.readInt()
   
   return LocalOsu(version, folderCount, unlocked, unlockedTime, playerName, beatmaps, permission)
+}
+
+fun findReplay(localOsuPath: Path, beatmapMd5: String, expectedReplayMd5: String): Path? {
+  val replayDir = localOsuPath
+    .resolve("Data")
+    .resolve("r")
+  
+  // so what does the fucking stupid number mean?
+  val candidates = replayDir.listDirectoryEntries("$beatmapMd5-*.osr")
+  candidates.forEach {
+    // we only read replay md5 hash
+    val replayMd5Hash = LittleEndianDataInputStream(it.inputStream()).use { bytes ->
+      bytes.skipBytes(1 + 4)    // Byte + Int
+      bytes.skipString()
+      bytes.skipString()
+      bytes.readString() ?: throw OsuParseException("null")
+    }
+    
+    if (replayMd5Hash == expectedReplayMd5) return it
+  }
+  
+  return null
 }
 
 private const val UNIX_EPOCH_MILLISECONDS = 62135596800000L

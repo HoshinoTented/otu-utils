@@ -14,7 +14,9 @@ import java.util.concurrent.Callable
     CommandListAnalyze::class,
     CommandRollback::class,
     CommandRenderScores::class,
-    CommandLine.HelpCommand::class
+    CommandBeatmapCollectionInfo::class,
+    CommandBeatmapCollectionExport::class,
+    CommandLine.HelpCommand::class,
   ]
 )
 abstract class MainArgs : Callable<Int> {
@@ -54,7 +56,23 @@ abstract class MainArgs : Callable<Int> {
   
   @CommandLine.Option(
     names = ["--prefer-local"],
-    description = ["Fetch data from local osu database if possible, 'local_osu_path' in application.json must be set."]
+    description = [
+      "Fetch data from local osu database if possible, 'local_osu_path' in application.json must be set.",
+      "Note that some information is not available in this mode, such as user score id."
+    ]
   )
   var preferLocal: Boolean = false
+  
+  override fun toString(): String {
+    return """
+      MainArgs(
+        profile=$profile,
+        userProfile=$userProfile,
+        verbose=$verbose,
+        dryRun=$dryRun,
+        noRefresh=$noRefresh,
+        preferLocal=$preferLocal
+      )
+    """.trimIndent()
+  }
 }

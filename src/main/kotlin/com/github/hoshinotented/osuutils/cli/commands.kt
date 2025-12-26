@@ -3,9 +3,15 @@ package com.github.hoshinotented.osuutils.cli
 import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.Users
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.cli.action.AnalyzeAction
+import com.github.hoshinotented.osuutils.cli.action.BeatmapCollectionActions
 import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
+import com.github.hoshinotented.osuutils.commonSerde
+import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import com.github.hoshinotented.osuutils.prettyBeatmap
+import com.github.hoshinotented.osuutils.util.ProgressIndicator
+import kala.collection.immutable.ImmutableSeq
 import picocli.CommandLine
 import java.io.File
 import java.util.concurrent.Callable
@@ -183,5 +189,51 @@ class CommandRenderScores() : Callable<Int> {
       .run()
     
     return@catching 0
+  }
+}
+
+@CommandLine.Command(name = "info-collection", description = ["Print information of a beatmap collection"])
+class CommandBeatmapCollectionInfo() : Callable<Int> {
+  @CommandLine.ParentCommand
+  lateinit var parent: Main
+  
+  @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = ["Path to beatmap collection"])
+  lateinit var pathToCollection: File
+  
+  fun beatmapCollection(): BeatmapCollection {
+    return commonSerde.decodeFromString<BeatmapCollection>(pathToCollection.readText())
+  }
+  
+  override fun call(): Int = parent.catching {
+    val action = BeatmapCollectionActions(beatmapCollection(), beatmapProvider, ProgressIndicator.Console)
+    val success = action.info()
+    
+    if (success) 0 else 1
+  }
+}
+
+@CommandLine.Command(
+  name = "export-collection-score",
+  description = ["Export highest score in collection from local osu!, NFV2 must on"]
+)
+class CommandBeatmapCollectionExport() : Callable<Int> {
+  @CommandLine.ParentCommand
+  lateinit var parent: Main
+  
+  @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = ["Path to beatmap collection"])
+  lateinit var pathToCollection: File
+  
+  @CommandLine.Parameters(index = "1", paramLabel = "DIRECTORY", description = ["Path to export output directory"])
+  lateinit var outDir: File
+  
+  fun beatmapCollection(): BeatmapCollection {
+    return commonSerde.decodeFromString<BeatmapCollection>(pathToCollection.readText())
+  }
+  
+  override fun call(): Int = parent.catching {
+    val action = BeatmapCollectionActions(beatmapCollection(), beatmapProvider, ProgressIndicator.Console)
+    val success = action.export(localOsuPath(), localOsu, localScores, outDir.toPath(), ImmutableSeq.of(Mod.NF, Mod.V2))
+    
+    if (success) 0 else 1
   }
 }

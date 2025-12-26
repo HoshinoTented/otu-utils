@@ -186,18 +186,19 @@ object Beatmaps {
   
   fun OsuApplication.bestScore(user: User, beatmapId: BeatmapId): Score? {
     val reqObj = Beatmaps.UserScore(beatmapId, user.player.id, legacyOnly = true)
-    val resp = sendAuthedRequest(user.token, reqObj.toRequest())
-    // it is possible that resp is 404, in this case, the user have no score of beatmap with id [beatmapId]
-    if (resp.statusCode() == 404) return null
-    val json = resp.successOrThrow()
+    // it is possible that the response is 404, in this case, the user have no score of beatmap with id [beatmapId]
+    val json = sendAuthedRequest(user.token, reqObj.toRequest())
+      .checkNotFound()
+      ?.successOrThrow() ?: return null
     val beatmapUserScore = deJson.decodeFromString<Beatmaps.UserScore.Response>(json)
     return beatmapUserScore.score
   }
   
-  fun OsuApplication.beatmapScores(user: User, beatmapId: BeatmapId): ImmutableSeq<Score> {
+  fun OsuApplication.beatmapScores(user: User, beatmapId: BeatmapId): ImmutableSeq<Score>? {
     val reqObj = Beatmaps.UserScoreAll(beatmapId, user.player.id, legacyOnly = true)
     val resp = sendAuthedRequest(user.token, reqObj.toRequest())
-      .successOrThrow()
+      .checkNotFound()
+      ?.successOrThrow() ?: return null
     val scores = deJson.decodeFromString<Beatmaps.UserScoreAll.Response>(resp)
     // response score are unsorted
     return scores.scores.sorted(Score.CreateTimeComparator)

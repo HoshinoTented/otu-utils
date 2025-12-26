@@ -60,5 +60,15 @@ enum class Mod {
       
       return result.toSeq()
     }
+    
+    fun toBitMask(mods: ImmutableSeq<Mod>): Int {
+      var bits = 0x0
+      
+      for (mod in mods) {
+        bits = bits or (1 shl mod.ordinal)
+      }
+      
+      return bits
+    }
   }
 }

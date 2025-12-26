@@ -4,6 +4,7 @@
 package com.github.hoshinotented.osuutils.osudb
 
 import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
+import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.api.endpoints.UserId
@@ -88,7 +89,8 @@ data class LocalBeatmap(
   }
   
   fun toBeatmap(): Beatmap = Beatmap(
-    beatmapSetId.toLong(), beatmapId.toLong(), 0.0F, difficultyName
+    beatmapSetId.toLong(), beatmapId.toLong(), 0.0F, difficultyName,
+    BeatmapSet(beatmapSetId.toLong(), title, titleUnicode ?: title, null)
   )
 }
 
@@ -131,26 +133,28 @@ data class LocalScore(
   val maxCombo: Short,
   val isPFC: Boolean,
   val mods: Int,
-  // a string that always empty
+  // a string that always empty, this is used in .osr file
   val _unused0: String?,
   val createTime: Instant,   // windows ticks
-  // always -1
-  val _unused1: Int,
+  // always -1, only used in .osr file
+  val replay: ByteArray?,
   val scoreId: Long,
 //  val someLazerShit: Double,
 ) {
-  /**
-   * @param beatmapProvider find [Beatmap] by md5 hash
-   */
-  fun toScore(userId: UserId, beatmapProvider: (String) -> Beatmap?): Score {
+  val accuracy: Float by lazy {
     // unfortunately we only consider osu!std, thus only 300, 100, 50 and miss involve acc calculation
     val noteCounts = greatAmount.toInt() + okAmout.toInt() + mehAmount.toInt() + missAmount.toInt()
     val b = noteCounts * 6    // 1 for 50, 2 for 100, and 6 for 300
     val a = greatAmount.toInt() * 6 + okAmout.toInt() * 2 + mehAmount.toInt()
-    val acc = a.toFloat() / b
-    
+    a.toFloat() / b
+  }
+  
+  /**
+   * @param beatmapProvider find [Beatmap] by md5 hash
+   */
+  fun toScore(userId: UserId, beatmapProvider: (String) -> Beatmap?): Score {
     return Score(
-      acc, createTime,
+      accuracy, createTime,
       scoreId, Mod.from(mods), userId,
       beatmapProvider(beatmapMd5Hash),
       null,

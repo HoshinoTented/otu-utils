@@ -64,6 +64,7 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     
     val path = databaseDir.resolve("$setId").resolve("$beatmapId.json")
     return if (path.exists()) {
+      // TODO: maybe cache?
       commonSerde.decodeFromString(path.readText())
     } else null
   }

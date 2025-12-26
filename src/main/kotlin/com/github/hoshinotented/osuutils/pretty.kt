@@ -4,6 +4,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
+import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -27,11 +28,15 @@ fun prettyTime(time: Instant): String {
     .format(time.toJavaInstant())
 }
 
-fun prettyMods(mods: MutableEnumSet<Mod>): String {
+fun prettyMods(mods: ImmutableSeq<Mod>, prefix: String = "+"): String {
+  return prettyMods(MutableEnumSet.from(Mod::class.java, mods), prefix)
+}
+
+fun prettyMods(mods: MutableEnumSet<Mod>, prefix: String = "+"): String {
   if (mods.isEmpty) return ""
   
   return buildString {
-    append("+")
+    append(prefix)
     Mod.entries.forEach {
       if (it in mods) {
         append(it)

@@ -12,6 +12,9 @@ import com.github.hoshinotented.osuutils.database.BeatmapDatabase
 import com.github.hoshinotented.osuutils.osudb.LocalOsu
 
 interface BeatmapProvider {
+  /**
+   * @return if not null, [Beatmap.beatmapSet] is always set
+   */
   fun beatmap(beatmapId: BeatmapId): Beatmap?
   fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet?
   
@@ -28,6 +31,9 @@ class OnlineBeatmapProvider(val application: OsuApplication, val user: User) : B
   }
 }
 
+/**
+ * @param delegate must NOT be [LocalBeatmapProvider]
+ */
 class CacheBeatmapProvider(val delegate: BeatmapProvider, val db: BeatmapDatabase) : BeatmapProvider {
   override fun beatmap(beatmapId: BeatmapId): Beatmap? {
     val result = delegate.beatmap(beatmapId)
@@ -50,7 +56,10 @@ class CacheBeatmapProvider(val delegate: BeatmapProvider, val db: BeatmapDatabas
 
 class LocalBeatmapProvider(val db: BeatmapDatabase) : BeatmapProvider {
   override fun beatmap(beatmapId: BeatmapId): Beatmap? {
-    return db.loadMaybe(beatmapId)
+    val local = db.loadMaybe(beatmapId) ?: return null
+    val set = db.loadSet(local.beatmapSetId)
+    
+    return local.copy(beatmapSet = set)
   }
   
   override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet? {
@@ -63,6 +72,7 @@ class LocalOsuBeatmapProvider(osu: LocalOsu) : BeatmapProvider {
   private val byBeatmapId = osu.beatmaps.associateBy { it.beatmapId }
   private val byBeatmapSetId = osu.beatmaps.groupBy { it.beatmapSetId }
   
+  // TODO: fill beatmapSet
   override fun beatmap(beatmapId: BeatmapId): Beatmap? {
     return byBeatmapId.getOrNull(beatmapId.toInt())?.toBeatmap()
   }

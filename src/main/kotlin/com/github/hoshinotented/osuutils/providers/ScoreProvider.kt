@@ -17,12 +17,12 @@ class OnlineScoreProvider(val application: OsuApplication) : ScoreProvider {
   override fun beatmapScores(
     user: User,
     beatmapId: BeatmapId,
-  ): ImmutableSeq<Score> {
-    // TODO: beatmapScores will throw an exception when beatmapId is invalid
+  ): ImmutableSeq<Score>? {
     return application.beatmapScores(user, beatmapId)
   }
 }
 
+// TODO: we need something that combines online score and local (v2) score
 class LocalOsuScoreProvider(osu: LocalOsu, scores: LocalScores) : ScoreProvider {
   private val byBeatmapId = osu.beatmaps.associateBy { it.beatmapId }
   private val beatmapByHash = osu.beatmaps.associateBy { it.md5Hash }

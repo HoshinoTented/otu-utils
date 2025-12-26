@@ -2,6 +2,9 @@
 
 package com.github.hoshinotented.osuutils.api.endpoints
 
+import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
+import com.github.hoshinotented.osuutils.prettyBeatmap
+import com.github.hoshinotented.osuutils.prettyMods
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.SerialName
@@ -50,12 +53,32 @@ data class Score(
   }
   
   companion object {
+    fun rawAcc(accuracy: Float): String {
+      return String.format("%2.2f", accuracy * 100)
+    }
+    
     fun prettyAcc(accuracy: Float): String {
       return String.format("%2.2f%%", accuracy * 100)
     }
     
     fun prettyDiff(bias: Float): String {
       return String.format("%+2.2f%%", bias * 100)
+    }
+    
+    /**
+     * @param beatmap TODO abstraction...
+     */
+    fun prettyScore(score: Int, accuracy: Float, mods: ImmutableSeq<Mod>, beatmap: LocalBeatmap): String {
+      return buildString {
+        append("$score ${prettyAcc(accuracy)} ")
+        if (mods.isNotEmpty) {
+          append("${prettyMods(mods)} ")
+        }
+        
+        append("| ")
+        
+        append(prettyBeatmap(beatmap))
+      }
     }
   }
 }
@@ -78,9 +101,9 @@ data class Beatmap(
   val id: Long,
   @SerialName("difficulty_rating") val difficulty: Float,
   val version: String,
+  @SerialName("beatmapset") val beatmapSet: BeatmapSet?,
 ) {
   companion object {
-    val DUMMY = Beatmap(0, 0, 0.0F, "")
     
     fun prettyDifficulty(difficulty: Float): String {
       return String.format("%.2f*", difficulty)
