@@ -7,6 +7,8 @@ import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
 import kala.collection.mutable.MutableMap
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Path
 import kotlin.io.path.inputStream
@@ -15,6 +17,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Instant
 import kotlin.time.measureTime
@@ -112,6 +115,34 @@ object Deserializers {
         if (length == -1) return null
         return bytes.readNBytes(length)
       }
+    })
+    
+    register(LazySeq::class, object : Deserializer<LazySeq<*>> {
+      override fun decode(
+        typeArgs: List<KTypeProjection>,
+        bytes: LittleEndianDataInputStream,
+      ): LazySeq<*> {
+        val proj = typeArgs[0]
+        val ty = proj.type ?: throw IllegalArgumentException("Unable to decode a star type")
+        val sized = (ty.classifier as KClass<*>)
+          .findAnnotations(Sized::class)
+          .getOrNull(0) ?: throw IllegalArgumentException("Element in LazySeq must be Sized")
+        val count = bytes.readInt()
+        val totalSize = count * sized.bytes
+        val buffer = bytes.readNBytes(totalSize)
+        
+        return LazySeq(lazy {
+          val result = FreezableMutableList.create<Any?>()
+          val stream = LittleEndianDataInputStream(ByteArrayInputStream(buffer))
+          
+          for (i in 0..<count) {
+            result.append(parse(ty, stream))
+          }
+          
+          result.freeze()
+        })
+      }
+      
     })
   }
   

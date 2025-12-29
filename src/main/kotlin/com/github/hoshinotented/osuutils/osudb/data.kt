@@ -12,15 +12,21 @@ import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Instant
 
-annotation class Padding(val bytes: Int)
+annotation class Sized(val bytes: Int)
 
 class OsuParseException(msg: String) : RuntimeException(msg)
 
 data class IntFloatPair(val int: Int, val float: Float)
 
+@Sized(bytes = 10)    // 4 + 4 + 2 where 2 is for two indicators
 data class ModStarCache(val mods: MutableEnumSet<Mod>, val difficulty: Float)
 
+@Sized(bytes = 17)
 data class TimePoint(val bpm: Double, val offset: Double, val inherit: Boolean)
+
+class LazySeq<T>(val initializer: Lazy<ImmutableSeq<T>>) {
+  val value: ImmutableSeq<T> get() = initializer.value
+}
 
 // Almost everything (stdModdedStarCache and timePoints) with ImmutableSeq is deserialized in slow speed, consider just read bytes and delay the deserialization?
 data class LocalBeatmap(
@@ -43,14 +49,14 @@ data class LocalBeatmap(
   val hp: Float,
   val od: Float,
   val sliderVelocity: Double,
-  val stdModdedStarCache: ImmutableSeq<ModStarCache>,
+  val stdModdedStarCache: LazySeq<ModStarCache>,
   val taikoModdedStarCache: ImmutableSeq<ModStarCache>,
   val ctbModdedStarCache: ImmutableSeq<ModStarCache>,
   val maniaModdedStarCache: ImmutableSeq<ModStarCache>,
   val drainTimeSeconds: Int,
   val totalTimeMilliseconds: Int,
   val someMysteryTimeWhichIDontKnowInMilliseconds: Int,
-  val timePoints: ImmutableSeq<TimePoint>,
+  val timePoints: LazySeq<TimePoint>,
   val beatmapId: Int,
   val beatmapSetId: Int,
   val threadId: Int,
@@ -91,7 +97,8 @@ data class LocalBeatmap(
   
   fun starRate(mods: ImmutableSeq<Mod> = ImmutableSeq.empty()): Float {
     val modSet = MutableEnumSet.from(Mod::class.java, mods)
-    return stdModdedStarCache.find { modSet == it.mods }
+    return stdModdedStarCache.value
+      .find { modSet == it.mods }
       .map { it.difficulty }
       .getOrDefault(0.0F)
   }
