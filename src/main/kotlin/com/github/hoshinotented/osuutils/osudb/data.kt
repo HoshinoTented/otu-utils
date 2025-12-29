@@ -9,6 +9,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.api.endpoints.UserId
 import kala.collection.immutable.ImmutableSeq
+import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Instant
 
 annotation class Padding(val bytes: Int)
@@ -17,11 +18,11 @@ class OsuParseException(msg: String) : RuntimeException(msg)
 
 data class IntFloatPair(val int: Int, val float: Float)
 
-data class ModStarCache(val mods: ImmutableSeq<Mod>, val difficulty: Float)
+data class ModStarCache(val mods: MutableEnumSet<Mod>, val difficulty: Float)
 
 data class TimePoint(val bpm: Double, val offset: Double, val inherit: Boolean)
 
-// WTF so there is no star rate cache?
+// Almost everything (stdModdedStarCache and timePoints) with ImmutableSeq is deserialized in slow speed, consider just read bytes and delay the deserialization?
 data class LocalBeatmap(
   val artist: String,
   val artistUnicode: String?,
@@ -88,10 +89,21 @@ data class LocalBeatmap(
     }
   }
   
-  fun toBeatmap(): Beatmap = Beatmap(
-    beatmapSetId.toLong(), beatmapId.toLong(), 0.0F, difficultyName,
-    BeatmapSet(beatmapSetId.toLong(), title, titleUnicode ?: title, null)
-  )
+  fun starRate(mods: ImmutableSeq<Mod> = ImmutableSeq.empty()): Float {
+    val modSet = MutableEnumSet.from(Mod::class.java, mods)
+    return stdModdedStarCache.find { modSet == it.mods }
+      .map { it.difficulty }
+      .getOrDefault(0.0F)
+  }
+  
+  fun toBeatmap(mods: ImmutableSeq<Mod> = ImmutableSeq.empty()): Beatmap {
+    val star = starRate(mods)
+    
+    return Beatmap(
+      beatmapSetId.toLong(), beatmapId.toLong(), star, difficultyName,
+      BeatmapSet(beatmapSetId.toLong(), title, titleUnicode ?: title, null)
+    )
+  }
 }
 
 data class LocalOsu(
@@ -136,7 +148,7 @@ data class LocalScore(
   // a string that always empty, this is used in .osr file
   val _unused0: String?,
   val createTime: Instant,   // windows ticks
-  // always -1, only used in .osr file
+  // always null, only used in .osr file
   val replay: ByteArray?,
   val scoreId: Long,
 //  val someLazerShit: Double,
@@ -155,7 +167,7 @@ data class LocalScore(
   fun toScore(userId: UserId, beatmapProvider: (String) -> Beatmap?): Score {
     return Score(
       accuracy, createTime,
-      scoreId, Mod.from(mods), userId,
+      scoreId, Mod.asSeq(mods), userId,
       beatmapProvider(beatmapMd5Hash),
       null,
       null

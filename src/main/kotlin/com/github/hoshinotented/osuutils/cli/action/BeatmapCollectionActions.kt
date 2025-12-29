@@ -36,7 +36,7 @@ class BeatmapCollectionActions(
         score.playerName,
         score.score.toString(),
         Score.rawAcc(score.accuracy),
-        prettyMods(Mod.from(score.mods), prefix = ""),
+        prettyMods(Mod.asSeq(score.mods), prefix = ""),
         beatmap.beatmapId.toString(),
         beatmap.title,
         beatmap.difficultyName
@@ -57,7 +57,7 @@ class BeatmapCollectionActions(
     progressIndicator.progress(1, collection.beatmaps.size(), TITLE_INFO, null)
     
     val beatmap = collection.beatmaps.mapIndexed { idx, it ->
-      val beatmap = beatmapProvider.beatmap(it)
+      val beatmap = beatmapProvider.beatmap(it.id)
       val beatmapDisplay = if (beatmap == null) "FAILED" else {
         // beatmap set never null since the property of [BeatmapProvider.beatmap]
         prettyBeatmap(beatmap.beatmapSet!!, beatmap)
@@ -90,8 +90,8 @@ class BeatmapCollectionActions(
     localOsu: LocalOsu,
     localScores: LocalScores,
     outDir: Path,
-    filter: ImmutableSeq<Mod>,
-  ): Boolean {   // we DO can use EnumSet, but i just don't
+    filter: ImmutableSeq<Mod>, // we DO can use EnumSet, but i just don't
+  ): Boolean {
     if (outDir.exists() && Files.newDirectoryStream(outDir).use { it.iterator().hasNext() }) {
       // outDir is dirty
       throw IOException("Output directory $outDir exists and is not empty, abort.")
@@ -106,7 +106,7 @@ class BeatmapCollectionActions(
     progressIndicator.progress(1, collection.beatmaps.size(), TITLE_EXPORT_FIND, null)
     
     val highestScores = collection.beatmaps.mapIndexed { idx, it ->
-      val localMap = byId.getOrNull(it.toInt())
+      val localMap = byId.getOrNull(it.id.toInt())
       if (localMap == null) {
         System.err.println("Beatmap with id $it is not found in local osu! database, skipped.")
         progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, "Skip")
@@ -124,7 +124,7 @@ class BeatmapCollectionActions(
             .filter { (it.mods and filterMask) == filterMask }
             .maxBy { it.score }
           
-          val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.from(highest.mods), localMap)
+          val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.asSeq(highest.mods), localMap)
           
           progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, subtitle)
           highest
@@ -138,8 +138,8 @@ class BeatmapCollectionActions(
     
     highestScores.forEachIndexed { idx, it ->
       if (it != null) {
-        val beatmapId = collection.beatmaps[idx]
-        val beatmap = byId[beatmapId.toInt()]   // never fail, see how a not null highestScore is produced
+        val beatmapInCollection = collection.beatmaps[idx]
+        val beatmap = byId[beatmapInCollection.id.toInt()]   // never fail, see how a not null highestScore is produced
         
         val found = findReplay(localOsuPath, it.beatmapMd5Hash, it.replayMd5Hash)
         if (found == null) {
@@ -148,7 +148,7 @@ class BeatmapCollectionActions(
               Score.prettyScore(
                 it.score,
                 it.accuracy,
-                Mod.from(it.mods),
+                Mod.asSeq(it.mods),
                 beatmap
               )
             }"
@@ -162,6 +162,27 @@ class BeatmapCollectionActions(
         }
       }
     }
+    
+    println("Your scores:")
+    var totalScore: Int = 0
+    
+    highestScores.forEachWith(collection.beatmaps) { score, beatmap ->
+      val tag = beatmap.tag
+      val prefix = if (tag == null) {
+        beatmap.id.toString()
+      } else {
+        "$tag(${beatmap.id})"
+      }
+      
+      val score = if (score == null) "No score" else {
+        totalScore += score.score
+        "${score.score} with accuracy ${Score.prettyAcc(score.accuracy)}"
+      }
+      
+      println("$prefix: $score")
+    }
+    
+    println("Total score: $totalScore")
     
     return success
   }

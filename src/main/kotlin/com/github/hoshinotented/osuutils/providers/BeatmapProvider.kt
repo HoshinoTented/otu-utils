@@ -67,13 +67,10 @@ class LocalBeatmapProvider(val db: BeatmapDatabase) : BeatmapProvider {
   }
 }
 
-// It is not recommended to use this provider, as beatmaps from local don't have star rate information
-// ^ omg are you serious? it is stored in [LocalBeatmap#stableModdedStarCache]
 class LocalOsuBeatmapProvider(osu: LocalOsu) : BeatmapProvider {
   private val byBeatmapId = osu.beatmaps.associateBy { it.beatmapId }
   private val byBeatmapSetId = osu.beatmaps.groupBy { it.beatmapSetId }
   
-  // TODO: fill beatmapSet
   override fun beatmap(beatmapId: BeatmapId): Beatmap? {
     return byBeatmapId.getOrNull(beatmapId.toInt())?.toBeatmap()
   }

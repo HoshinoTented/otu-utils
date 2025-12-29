@@ -16,7 +16,7 @@ class ReadOsuTest {
   @Test
   fun testOsu() {
     val `in` = LittleEndianDataInputStream(osuPath.resolve("osu!.db").inputStream())
-    val osu = parseLocalOsu(`in`, LocalOsuParseListener.Console)
+    val osu = parseLocalOsu(`in`, LocalOsuParseListener.Console())
     return
   }
   

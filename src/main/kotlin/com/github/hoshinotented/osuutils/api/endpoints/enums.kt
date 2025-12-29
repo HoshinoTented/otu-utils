@@ -2,6 +2,7 @@ package com.github.hoshinotented.osuutils.api.endpoints
 
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
+import kala.collection.mutable.MutableEnumSet
 
 enum class Mode {
   Osu;
@@ -47,18 +48,22 @@ enum class Mod {
   MR;   // mirror
   
   companion object {
-    fun from(bits: Int): ImmutableSeq<Mod> {
-      val result = FreezableMutableList.create<Mod>()
+    fun asSeq(bits: Int): ImmutableSeq<Mod> {
+      return asSet(bits).toSeq()
+    }
+    
+    fun asSet(bits: Int): MutableEnumSet<Mod> {
+      val set = MutableEnumSet.create(Mod::class.java)
       
       for (mod in entries) {
         val mask = 1 shl mod.ordinal
         val bit = bits and mask
         if (bit != 0) {
-          result.append(mod)
+          set.add(mod)
         }
       }
       
-      return result.toSeq()
+      return set
     }
     
     fun toBitMask(mods: ImmutableSeq<Mod>): Int {

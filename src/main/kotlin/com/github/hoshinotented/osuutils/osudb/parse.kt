@@ -17,6 +17,7 @@ import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Instant
+import kotlin.time.measureTime
 
 @FunctionalInterface
 interface Deserializer<T : Any> {
@@ -101,7 +102,7 @@ object Deserializers {
         bytes: LittleEndianDataInputStream,
       ): ModStarCache {
         var pair = bytes.readIntFloatPair()
-        return ModStarCache(Mod.from(pair.int), pair.float)
+        return ModStarCache(Mod.asSet(pair.int), pair.float)
       }
     })
     
@@ -265,6 +266,7 @@ interface LocalOsuParseListener {
   }
 }
 
+// FIXME: why this so slow...
 fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseListener): LocalOsu {
   val version = bytes.readInt()
   val folderCount = bytes.readInt()

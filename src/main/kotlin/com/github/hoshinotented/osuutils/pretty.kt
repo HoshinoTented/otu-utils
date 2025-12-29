@@ -3,6 +3,7 @@ package com.github.hoshinotented.osuutils
 import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
@@ -14,12 +15,17 @@ import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
 fun prettyBeatmap(set: BeatmapSet, map: Beatmap): String {
-  return "${set.titleUnicode} / ${map.version} / ${Beatmap.prettyDifficulty(map.difficulty)}"
+  return prettyBeatmap(set.title, map.version, map.difficulty)
 }
 
 fun prettyBeatmap(local: LocalBeatmap): String {
-  return "${local.titleUnicode ?: local.title} / ${local.difficultyName} / ${Beatmap.prettyDifficulty(local.od)}"
+  return prettyBeatmap(local.titleUnicode ?: local.title, local.difficultyName, local.starRate())
 }
+
+fun prettyBeatmap(title: String, difficultyName: String, starRate: Float): String {
+  return "$title / $difficultyName / ${Beatmap.prettyDifficulty(starRate)}"
+}
+
 
 fun prettyTime(time: Instant): String {
   return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
