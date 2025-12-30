@@ -205,8 +205,8 @@ class CommandBeatmapCollectionInfo() : Callable<Int> {
   }
   
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(beatmapCollection(), beatmapProvider, ProgressIndicator.Console)
-    val success = action.info()
+    val action = BeatmapCollectionActions(beatmapCollection(), ProgressIndicator.Console)
+    val success = action.info(beatmapProvider)
     
     if (success) 0 else 1
   }
@@ -231,9 +231,34 @@ class CommandBeatmapCollectionExport() : Callable<Int> {
   }
   
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(beatmapCollection(), beatmapProvider, ProgressIndicator.Console)
+    val action = BeatmapCollectionActions(beatmapCollection(), ProgressIndicator.Console)
     val success = action.export(localOsuPath(), localOsu, localScores, outDir.toPath(), ImmutableSeq.of(Mod.NF, Mod.V2))
     
     if (success) 0 else 1
+  }
+}
+
+@CommandLine.Command(
+  name = "download-collection",
+  description = ["Download beatmaps in the collection, must not with '--prefer-local'"]
+)
+class CommandBeatmapCollectionDownload : Callable<Int> {
+  @CommandLine.ParentCommand
+  lateinit var parent: Main
+  
+  @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = ["Path to beatmap collection"])
+  lateinit var pathToCollection: File
+  
+  @CommandLine.Parameters(index = "1", paramLabel = "DIRECTORY", description = ["Path to export output directory"])
+  lateinit var outDir: File
+  
+  fun beatmapCollection(): BeatmapCollection {
+    return commonSerde.decodeFromString<BeatmapCollection>(pathToCollection.readText())
+  }
+  
+  override fun call(): Int = parent.catching {
+    val action = BeatmapCollectionActions(beatmapCollection(), ProgressIndicator.Console)
+    action.download(outDir.toPath(), beatmapProvider)
+    0
   }
 }

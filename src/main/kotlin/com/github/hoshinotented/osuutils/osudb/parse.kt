@@ -298,6 +298,7 @@ interface LocalOsuParseListener {
 }
 
 // FIXME: why this so slow...
+// possible issue: ModdedStarCache is too big (all combinations of difficulty change mods), or deserializing ModdedStarCache is slow, as it converts Int to MutableEnumSet<Mod>
 fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseListener): LocalOsu {
   val version = bytes.readInt()
   val folderCount = bytes.readInt()

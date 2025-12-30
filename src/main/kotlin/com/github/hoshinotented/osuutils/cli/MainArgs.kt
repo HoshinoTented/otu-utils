@@ -16,6 +16,7 @@ import java.util.concurrent.Callable
     CommandRenderScores::class,
     CommandBeatmapCollectionInfo::class,
     CommandBeatmapCollectionExport::class,
+    CommandBeatmapCollectionDownload::class,
     CommandLine.HelpCommand::class,
   ]
 )

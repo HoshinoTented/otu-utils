@@ -10,7 +10,7 @@ interface ProgressIndicator {
   fun progress(ratio: Double, title: String?, subtitle: String?)
   
   /**
-   * @param current current processing, from `1` to [max]
+   * @param current current processing, from `0` to [max]
    */
   fun progress(current: Int, max: Int, title: String?, subtitle: String?) {
     progress(current.toDouble() / max, title, subtitle)
@@ -63,5 +63,32 @@ interface ProgressIndicator {
     
     override fun progress(current: Int, max: Int, title: String?, subtitle: String?) {
     }
+  }
+}
+
+class AccumulateProgressIndicator(val delegate: ProgressIndicator) : ProgressIndicator by delegate {
+  private var title: String? = null
+  private var acc: Int = 0
+  private var max: Int = 0
+  
+  fun init(max: Int, title: String?, subtitle: String?) {
+    this.max = max
+    
+    if (max != 0) {
+      this.title = title
+      progress(0, max, title, subtitle)
+    }
+  }
+  
+  fun progress(subtitle: String?) {
+    if (acc < max) {
+      progress(++acc, max, title, subtitle)
+    } else {
+      throw IllegalStateException("Current counter: $acc while max at $max")
+    }
+  }
+  
+  fun update(subtitle: String?) {
+    progress(acc, max, title, subtitle)
   }
 }

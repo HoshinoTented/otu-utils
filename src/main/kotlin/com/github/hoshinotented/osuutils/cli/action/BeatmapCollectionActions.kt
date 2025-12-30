@@ -1,6 +1,9 @@
 package com.github.hoshinotented.osuutils.cli.action
 
 import com.github.hoshinotented.osuutils.api.Beatmaps
+import com.github.hoshinotented.osuutils.api.HttpException
+import com.github.hoshinotented.osuutils.api.OsuApi
+import com.github.hoshinotented.osuutils.api.endpoints.EndpointRequest.Companion.initCommon
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
@@ -12,24 +15,33 @@ import com.github.hoshinotented.osuutils.osudb.findReplay
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyMods
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
+import com.github.hoshinotented.osuutils.util.AccumulateProgressIndicator
 import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.immutable.ImmutableSeq
 import java.io.IOException
+import java.net.URI
+import java.net.URLEncoder
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.nio.file.Files
+import java.nio.file.OpenOption
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.jvm.optionals.getOrNull
 
 class BeatmapCollectionActions(
   val collection: BeatmapCollection,
-  val beatmapProvider: BeatmapProvider,
   val progressIndicator: ProgressIndicator,
 ) {
   companion object {
     const val TITLE_INFO = "Fetch Beatmap Data"
     const val TITLE_EXPORT_FIND = "Find Highest Score"
     const val TITLE_EXPORT_EXPORT = "Export Highest Score"
+    const val TITLE_DOWNLOAD = "Download Beatmap"
     
     fun replayFileName(beatmap: LocalBeatmap, score: LocalScore): String {
       val components = ImmutableSeq.of(
@@ -49,7 +61,7 @@ class BeatmapCollectionActions(
   /**
    * @return if success
    */
-  fun info(): Boolean {
+  fun info(beatmapProvider: BeatmapProvider): Boolean {
     println("Collection name: ${collection.name}")
     println("Author: ${collection.author}")
     
@@ -103,7 +115,9 @@ class BeatmapCollectionActions(
     
     var success = true
     
-    progressIndicator.progress(1, collection.beatmaps.size(), TITLE_EXPORT_FIND, null)
+    if (collection.beatmaps.size() != 0) {
+      progressIndicator.progress(1, collection.beatmaps.size(), TITLE_EXPORT_FIND, null)
+    }
     
     val highestScores = collection.beatmaps.mapIndexed { idx, it ->
       val localMap = byId.getOrNull(it.id.toInt())
@@ -185,5 +199,59 @@ class BeatmapCollectionActions(
     println("Total score: $totalScore")
     
     return success
+  }
+  
+  /**
+   * Download all beatmap in collection to [outDir]
+   * @param outDir target directory, can be absent or dirty
+   */
+  fun download(outDir: Path, beatmapProvider: BeatmapProvider) {
+    if (!outDir.exists()) {
+      outDir.createDirectories()
+    } else if (!outDir.isDirectory()) {
+      throw IllegalArgumentException("Cannot download to a file: $outDir")
+    }
+    
+    val pi = AccumulateProgressIndicator(progressIndicator)
+    pi.init(collection.beatmaps.size(), TITLE_DOWNLOAD, null)
+    
+    collection.beatmaps.forEach {
+      
+      val map = beatmapProvider.beatmap(it.id)
+      if (map == null) {
+        pi.progress("Beatmap ${it.id} is not found, skip.")
+      } else {
+        val set = map.beatmapSet!!
+        pi.progress(prettyBeatmap(set, map))
+        // TODO: maybe skip when outDir contains such file
+        // sayobot doesn't provide valid "location" which whitespace is not url encoded
+        val resp = OsuApi.client.send(
+          HttpRequest.newBuilder(URI.create(Beatmaps.makeBeatmapDownloadUrlSayobot(set.id)))
+            .GET()
+            .build(), HttpResponse.BodyHandlers.ofByteArray()
+        )
+        
+        if (resp.statusCode() == 302) {
+          val location = resp.headers().firstValue("Location").getOrNull()
+            ?: throw RuntimeException("Expecting location header field")
+          
+          // trash code, how to eliminate??
+          val target = location.replace(" ", "%20")
+          OsuApi.client.send(
+            HttpRequest.newBuilder(URI.create(target))
+              .GET()
+              .build(),
+            HttpResponse.BodyHandlers.ofFileDownload(
+              outDir,
+              StandardOpenOption.WRITE,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.TRUNCATE_EXISTING,
+            )
+          )
+        } else {
+          throw RuntimeException("Unexpected ${resp.statusCode()}, this could be sayobot changes their download strategy, skip.")
+        }
+      }
+    }
   }
 }

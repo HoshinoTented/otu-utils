@@ -56,6 +56,8 @@ object OsuApi {
   
   val client: HttpClient = HttpClient.newBuilder()
     .version(HttpClient.Version.HTTP_2)
+    // see BeatmapCollectionActions#download
+//    .followRedirects(HttpClient.Redirect.NORMAL)
     .build()
   
   /// region OAuth
@@ -175,6 +177,16 @@ object Users {
 object Beatmaps {
   fun makeBeatmapUrl(beatmapId: BeatmapId): String {
     return "${OsuApi.BASE_URL}/b/$beatmapId"
+  }
+  
+  // TODO: abstraction
+  // TODO: this does not work
+  fun makeBeatmapDownloadUrl(beatmapSetId: BeatmapSetId): String {
+    return "${OsuApi.BASE_URL}/beatmapsets/${beatmapSetId}/download"
+  }
+  
+  fun makeBeatmapDownloadUrlSayobot(setId: BeatmapSetId): String {
+    return "https://txy1.sayobot.cn/beatmaps/download/full/$setId"
   }
   
   /**
