@@ -16,6 +16,8 @@ import kotlinx.serialization.UseSerializers
 import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
@@ -52,6 +54,14 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
       return Metadata(map)
     } else {
       return Metadata(mutableMapOf())
+    }
+  }
+  
+  fun listSets(): ImmutableSeq<BeatmapSetId> {
+    val entries = databaseDir.listDirectoryEntries(glob = "*.json")
+    val sets = entries.filter { it.fileName.name != "metadata.json" }
+    return ImmutableSeq.from(sets).map {
+      commonSerde.decodeFromString<ThinBeatmapSet>(it.readText()).id
     }
   }
   

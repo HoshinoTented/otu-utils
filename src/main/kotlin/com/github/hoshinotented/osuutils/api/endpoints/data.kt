@@ -2,6 +2,7 @@
 
 package com.github.hoshinotented.osuutils.api.endpoints
 
+import com.github.hoshinotented.osuutils.data.IBeatmap
 import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyMods
@@ -68,7 +69,7 @@ data class Score(
     /**
      * @param beatmap TODO abstraction...
      */
-    fun prettyScore(score: Int, accuracy: Float, mods: ImmutableSeq<Mod>, beatmap: LocalBeatmap): String {
+    fun prettyScore(score: Int, accuracy: Float, mods: ImmutableSeq<Mod>, beatmap: IBeatmap): String {
       return buildString {
         append("$score ${prettyAcc(accuracy)} ")
         if (mods.isNotEmpty) {
@@ -95,6 +96,9 @@ data class BeatmapSet(
 }
 
 // TODO: some api returns Beatmap with "beatmapset", this can save time
+/**
+ * For [IBeatmap], the caller must ensure that [beatmapSet] and [checksum] is set...
+ */
 @Serializable
 data class Beatmap(
   @SerialName("beatmapset_id") val beatmapSetId: Long,
@@ -102,9 +106,29 @@ data class Beatmap(
   @SerialName("difficulty_rating") val difficulty: Float,
   val version: String,
   @SerialName("beatmapset") val beatmapSet: BeatmapSet?,
-) {
+  val checksum: String?,
+) : IBeatmap {
+  override fun beatmapId(): BeatmapId {
+    return id
+  }
+  
+  override fun title(): String {
+    return beatmapSet!!.titleUnicode
+  }
+  
+  override fun difficultyName(): String {
+    return version
+  }
+  
+  override fun starRate(): Float {
+    return difficulty
+  }
+  
+  override fun md5Hash(): String {
+    return checksum!!
+  }
+  
   companion object {
-    
     fun prettyDifficulty(difficulty: Float): String {
       return String.format("%.2f*", difficulty)
     }

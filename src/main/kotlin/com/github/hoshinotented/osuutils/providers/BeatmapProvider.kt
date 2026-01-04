@@ -13,7 +13,7 @@ import com.github.hoshinotented.osuutils.osudb.LocalOsu
 
 interface BeatmapProvider {
   /**
-   * @return if not null, [Beatmap.beatmapSet] is always set
+   * @return if not null, [Beatmap.beatmapSet] and [Beatmap.checksum] is always set
    */
   fun beatmap(beatmapId: BeatmapId): Beatmap?
   fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSet?

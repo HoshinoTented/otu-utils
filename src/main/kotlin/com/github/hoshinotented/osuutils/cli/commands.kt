@@ -192,20 +192,29 @@ class CommandRenderScores() : Callable<Int> {
   }
 }
 
-@CommandLine.Command(name = "info-collection", description = ["Print information of a beatmap collection"])
-class CommandBeatmapCollectionInfo() : Callable<Int> {
+abstract class CommandBeatmapCollectionArgs() {
   @CommandLine.ParentCommand
   lateinit var parent: Main
   
   @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = ["Path to beatmap collection"])
   lateinit var pathToCollection: File
   
+  @CommandLine.Option(
+    names = ["-o"],
+    paramLabel = "FILE",
+    description = ["Path to new beatmap collection file, some cache will be wrote in"]
+  )
+  var pathToNewCollection: File? = null
+  
   fun beatmapCollection(): BeatmapCollection {
     return commonSerde.decodeFromString<BeatmapCollection>(pathToCollection.readText())
   }
-  
+}
+
+@CommandLine.Command(name = "info-collection", description = ["Print information of a beatmap collection"])
+class CommandBeatmapCollectionInfo() : CommandBeatmapCollectionArgs(), Callable<Int> {
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(beatmapCollection(), ProgressIndicator.Console)
+    val action = BeatmapCollectionActions(pathToNewCollection?.toPath(), beatmapCollection(), ProgressIndicator.Console)
     val success = action.info(beatmapProvider)
     
     if (success) 0 else 1
@@ -216,23 +225,14 @@ class CommandBeatmapCollectionInfo() : Callable<Int> {
   name = "export-collection-score",
   description = ["Export highest score in collection from local osu!, NFV2 must on"]
 )
-class CommandBeatmapCollectionExport() : Callable<Int> {
-  @CommandLine.ParentCommand
-  lateinit var parent: Main
-  
-  @CommandLine.Parameters(index = "0", paramLabel = "FILE", description = ["Path to beatmap collection"])
-  lateinit var pathToCollection: File
-  
+class CommandBeatmapCollectionExport() : CommandBeatmapCollectionArgs(), Callable<Int> {
   @CommandLine.Parameters(index = "1", paramLabel = "DIRECTORY", description = ["Path to export output directory"])
   lateinit var outDir: File
   
-  fun beatmapCollection(): BeatmapCollection {
-    return commonSerde.decodeFromString<BeatmapCollection>(pathToCollection.readText())
-  }
-  
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(beatmapCollection(), ProgressIndicator.Console)
-    val success = action.export(localOsuPath(), localOsu, localScores, outDir.toPath(), ImmutableSeq.of(Mod.NF, Mod.V2))
+    val action = BeatmapCollectionActions(pathToNewCollection?.toPath(), beatmapCollection(), ProgressIndicator.Console)
+    val success =
+      action.export(localOsuPath(), beatmapProvider, localScores, outDir.toPath(), ImmutableSeq.of(Mod.NF, Mod.V2))
     
     if (success) 0 else 1
   }
@@ -257,7 +257,7 @@ class CommandBeatmapCollectionDownload : Callable<Int> {
   }
   
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(beatmapCollection(), ProgressIndicator.Console)
+    val action = BeatmapCollectionActions(null, beatmapCollection(), ProgressIndicator.Console)
     action.download(outDir.toPath(), beatmapProvider)
     0
   }

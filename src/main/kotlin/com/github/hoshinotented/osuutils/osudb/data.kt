@@ -4,10 +4,13 @@
 package com.github.hoshinotented.osuutils.osudb
 
 import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
+import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.api.endpoints.UserId
+import com.github.hoshinotented.osuutils.data.IBeatmap
+import kala.collection.SeqView
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Instant
@@ -24,8 +27,12 @@ data class ModStarCache(val mods: MutableEnumSet<Mod>, val difficulty: Float)
 @Sized(bytes = 17)
 data class TimePoint(val bpm: Double, val offset: Double, val inherit: Boolean)
 
-class LazySeq<T>(val initializer: Lazy<ImmutableSeq<T>>) {
+class LazySeq<T>(val initializer: Lazy<ImmutableSeq<T>>) : SeqView<T> {
   val value: ImmutableSeq<T> get() = initializer.value
+  
+  override fun iterator(): MutableIterator<T> {
+    return value.iterator()
+  }
 }
 
 // Almost everything (stdModdedStarCache and timePoints) with ImmutableSeq is deserialized in slow speed, consider just read bytes and delay the deserialization?
@@ -84,7 +91,7 @@ data class LocalBeatmap(
   // val unknown: Short,
   val lastModifiedTime: Int,
   val maniaScrollSpeed: Byte,
-) {
+) : IBeatmap {
   companion object {
     enum class RankedStatus {
       Unknown, Unsubmitted, Graveyard, Unused, Ranked, Approved, Qualified, Loved
@@ -108,9 +115,20 @@ data class LocalBeatmap(
     
     return Beatmap(
       beatmapSetId.toLong(), beatmapId.toLong(), star, difficultyName,
-      BeatmapSet(beatmapSetId.toLong(), title, titleUnicode ?: title, null)
+      BeatmapSet(beatmapSetId.toLong(), title, titleUnicode ?: title, null),
+      null
     )
   }
+  
+  override fun beatmapId(): BeatmapId = beatmapId.toLong()
+  
+  override fun title(): String = titleUnicode ?: title
+  
+  override fun difficultyName(): String = difficultyName
+  
+  override fun starRate(): Float = starRate(ImmutableSeq.empty())
+  
+  override fun md5Hash(): String = md5Hash
 }
 
 data class LocalOsu(

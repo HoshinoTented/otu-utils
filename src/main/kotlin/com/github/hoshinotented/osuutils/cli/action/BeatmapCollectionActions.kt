@@ -1,17 +1,15 @@
 package com.github.hoshinotented.osuutils.cli.action
 
 import com.github.hoshinotented.osuutils.api.Beatmaps
-import com.github.hoshinotented.osuutils.api.HttpException
 import com.github.hoshinotented.osuutils.api.OsuApi
-import com.github.hoshinotented.osuutils.api.endpoints.EndpointRequest.Companion.initCommon
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
-import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
-import com.github.hoshinotented.osuutils.osudb.LocalOsu
-import com.github.hoshinotented.osuutils.osudb.LocalScore
-import com.github.hoshinotented.osuutils.osudb.LocalScores
-import com.github.hoshinotented.osuutils.osudb.findReplay
+import com.github.hoshinotented.osuutils.data.BeatmapInCollection
+import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
+import com.github.hoshinotented.osuutils.data.IBeatmap
+import com.github.hoshinotented.osuutils.osudb.*
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyMods
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
@@ -20,20 +18,24 @@ import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.immutable.ImmutableSeq
 import java.io.IOException
 import java.net.URI
-import java.net.URLEncoder
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Files
-import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.io.path.writeText
 import kotlin.jvm.optionals.getOrNull
 
+/**
+ * @param collectionFilePath the path used for writing new [BeatmapCollection], this is not necessary the path
+ *                           where [collection] is deserialized.
+ */
 class BeatmapCollectionActions(
+  val collectionFilePath: Path?,
   val collection: BeatmapCollection,
   val progressIndicator: ProgressIndicator,
 ) {
@@ -43,19 +45,68 @@ class BeatmapCollectionActions(
     const val TITLE_EXPORT_EXPORT = "Export Highest Score"
     const val TITLE_DOWNLOAD = "Download Beatmap"
     
-    fun replayFileName(beatmap: LocalBeatmap, score: LocalScore): String {
+    fun replayFileName(beatmap: IBeatmap, score: LocalScore): String {
       val components = ImmutableSeq.of(
         score.playerName,
         score.score.toString(),
         Score.rawAcc(score.accuracy),
         prettyMods(Mod.asSeq(score.mods), prefix = ""),
-        beatmap.beatmapId.toString(),
-        beatmap.title,
-        beatmap.difficultyName
+        beatmap.beatmapId().toString(),
+        beatmap.title(),
+        beatmap.difficultyName()
       )
       
       return components.joinToString("-")
     }
+  }
+  
+  /**
+   * Fill [com.github.hoshinotented.osuutils.data.BeatmapInCollection.cache],
+   * note that it is possible that some [BeatmapInCollection.cache] is still null,
+   * which means the beatmap id is invalid
+   */
+  fun prepare(beatmapProvider: BeatmapProvider): ImmutableSeq<BeatmapInCollection> {
+    val pi = AccumulateProgressIndicator(progressIndicator)
+    pi.init(collection.beatmaps.size(), TITLE_INFO, null)
+    
+    var changed = false
+    val result = collection.beatmaps.mapIndexed { idx, it ->
+      if (it.cache != null) {
+        pi.progress("Cache hit for $idx, skip")
+        it
+      } else {
+        val cache = beatmapProvider.beatmap(it.id)?.let { beatmap ->
+          val set = beatmap.beatmapSet!!
+          BeatmapInfoCache(it.id, set.title, set.titleUnicode, beatmap.version, beatmap.difficulty, beatmap.checksum!!)
+        }
+        
+        if (cache == null) {
+          System.err.println("Cannot find beatmap $idx")
+          pi.progress("Cannot find beatmap $idx")
+          it
+        } else {
+          pi.progress(prettyBeatmap(cache.titleUnicode ?: cache.title, cache.difficultyName, cache.starRate))
+          changed = true
+          it.copy(cache = cache)
+        }
+      }
+    }
+    
+    // shabi intellij
+    return if (changed) result else collection.beatmaps
+  }
+  
+  /**
+   * This method will write a new BeatmapCollection
+   */
+  fun prepareDirty(beatmapProvider: BeatmapProvider): BeatmapCollection {
+    val result = prepare(beatmapProvider)
+    if (result === collection.beatmaps) return collection
+    
+    // some cache is filled, write to user
+    val collection = collection.copy(beatmaps = result)
+    collectionFilePath?.writeText(commonSerde.encodeToString(collection))
+    return collection
   }
   
   /**
@@ -65,28 +116,24 @@ class BeatmapCollectionActions(
     println("Collection name: ${collection.name}")
     println("Author: ${collection.author}")
     
-    // let user know what we doing
-    progressIndicator.progress(1, collection.beatmaps.size(), TITLE_INFO, null)
-    
-    val beatmap = collection.beatmaps.mapIndexed { idx, it ->
-      val beatmap = beatmapProvider.beatmap(it.id)
-      val beatmapDisplay = if (beatmap == null) "FAILED" else {
-        // beatmap set never null since the property of [BeatmapProvider.beatmap]
-        prettyBeatmap(beatmap.beatmapSet!!, beatmap)
-      }
-      
-      progressIndicator.progress(idx, collection.beatmaps.size(), TITLE_INFO, beatmapDisplay)
-      beatmap
-    }
-    
+    val collection = prepareDirty(beatmapProvider)
     var success = true
     
-    beatmap.forEachIndexed { idx, it ->
-      if (it == null) {
-        System.err.println("Invalid beatmap id: ${collection.beatmaps[idx]}")
+    collection.beatmaps.forEach {
+      val cache = it.cache
+      if (cache == null) {
+        // already report in [prepare]
         success = false
       } else {
-        println("[${prettyBeatmap(it.beatmapSet!!, it)}](${Beatmaps.makeBeatmapUrl(it.id)})")
+        println(
+          "[${
+            prettyBeatmap(
+              cache.titleUnicode ?: cache.title,
+              cache.difficultyName,
+              cache.starRate
+            )
+          }](${Beatmaps.makeBeatmapUrl(it.id)})"
+        )
       }
     }
     
@@ -99,7 +146,7 @@ class BeatmapCollectionActions(
    */
   fun export(
     localOsuPath: Path,
-    localOsu: LocalOsu,
+    beatmapProvider: BeatmapProvider,
     localScores: LocalScores,
     outDir: Path,
     filter: ImmutableSeq<Mod>, // we DO can use EnumSet, but i just don't
@@ -109,7 +156,8 @@ class BeatmapCollectionActions(
       throw IOException("Output directory $outDir exists and is not empty, abort.")
     }
     
-    val byId = localOsu.beatmaps.associateBy { it.beatmapId }
+    // TODO: replace with BeatmapProvider
+    val fill = prepareDirty(beatmapProvider)
     val byHash = localScores.scoredBeatmaps.associateBy { it.md5Hash }
     val filterMask = Mod.toBitMask(filter)
     
@@ -120,14 +168,13 @@ class BeatmapCollectionActions(
     }
     
     val highestScores = collection.beatmaps.mapIndexed { idx, it ->
-      val localMap = byId.getOrNull(it.id.toInt())
-      if (localMap == null) {
-        System.err.println("Beatmap with id $it is not found in local osu! database, skipped.")
+      val cache = it.cache
+      if (cache == null) {
         progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, "Skip")
         success = false
         null
       } else {
-        val scores = byHash.getOrNull(localMap.md5Hash)
+        val scores = byHash.getOrNull(cache.md5Hash)
         if (scores == null) {
           System.err.println("Beatmap with id $it has no score.")
           progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, "Skip")
@@ -138,7 +185,7 @@ class BeatmapCollectionActions(
             .filter { (it.mods and filterMask) == filterMask }
             .maxBy { it.score }
           
-          val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.asSeq(highest.mods), localMap)
+          val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.asSeq(highest.mods), cache)
           
           progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, subtitle)
           highest
@@ -153,7 +200,7 @@ class BeatmapCollectionActions(
     highestScores.forEachIndexed { idx, it ->
       if (it != null) {
         val beatmapInCollection = collection.beatmaps[idx]
-        val beatmap = byId[beatmapInCollection.id.toInt()]   // never fail, see how a not null highestScore is produced
+        val beatmap = beatmapInCollection.cache!!   // never null, it != null implies cache != null
         
         val found = findReplay(localOsuPath, it.beatmapMd5Hash, it.replayMd5Hash)
         if (found == null) {
@@ -216,7 +263,6 @@ class BeatmapCollectionActions(
     pi.init(collection.beatmaps.size(), TITLE_DOWNLOAD, null)
     
     collection.beatmaps.forEach {
-      
       val map = beatmapProvider.beatmap(it.id)
       if (map == null) {
         pi.progress("Beatmap ${it.id} is not found, skip.")

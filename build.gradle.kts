@@ -29,6 +29,7 @@ dependencies {
   implementation(libs.picocli)
   implementation(libs.jfreechart)
   implementation(libs.guava)
+  implementation(libs.sqlite)
   
   kapt(libs.picocli.codegen)
   

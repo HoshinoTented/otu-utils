@@ -20,13 +20,9 @@ class ScoreHistoryDatabase(val historyDir: Path, val io: FileIO) {
   @Serializable
   data class TrackBeatmap(val id: BeatmapId, val comment: String?)
   
-  inner class TrackBeatmaps(
+  data class TrackBeatmaps(
     val beatmaps: ImmutableSeq<TrackBeatmap>,
-  ) : AutoCloseable {
-    override fun close() {
-      io.writeText(trackingMapsPath, commonSerde.encodeToString(beatmaps))
-    }
-  }
+  )
   
   val trackingMapsPath: Path = historyDir.resolve("tracking_beatmaps.json")
   

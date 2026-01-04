@@ -4,6 +4,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
+import com.github.hoshinotented.osuutils.data.IBeatmap
 import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
@@ -24,6 +25,10 @@ fun prettyBeatmap(local: LocalBeatmap): String {
 
 fun prettyBeatmap(title: String, difficultyName: String, starRate: Float): String {
   return "$title / $difficultyName / ${Beatmap.prettyDifficulty(starRate)}"
+}
+
+fun prettyBeatmap(beatmap: IBeatmap): String {
+  return prettyBeatmap(beatmap.title(), beatmap.difficultyName(), beatmap.starRate())
 }
 
 
