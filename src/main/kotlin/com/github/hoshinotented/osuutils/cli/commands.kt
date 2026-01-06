@@ -102,6 +102,7 @@ class CommandAnalyze() : Callable<Int> {
         scoreHistoryDB,
         beatmapProvider,
         scoreProvider,
+        ProgressIndicator.Console,
         AnalyzeAction.Options(showRecentUnplayed)
       )
     val analResult = action.analyze()
@@ -158,7 +159,10 @@ class CommandRollback() : Callable<Int> {
   override fun call(): Int = parent.catching {
     val user = user()
     val app = app()
-    val action = AnalyzeAction(app, user, analyzeMetadataDB, scoreHistoryDB, beatmapProvider, scoreProvider)
+    val action = AnalyzeAction(
+      app, user, analyzeMetadataDB, scoreHistoryDB, beatmapProvider, scoreProvider,
+      ProgressIndicator.Console
+    )
     action.removeLastAnalyze(null)
     return 0
   }

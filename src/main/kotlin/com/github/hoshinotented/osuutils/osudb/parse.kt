@@ -74,6 +74,9 @@ object Deserializers {
         typeArgs: List<KTypeProjection>,
         bytes: LittleEndianDataInputStream,
       ): ImmutableSeq<*> {
+        // Don't use ImmutableSeq in database structure directly when the element type has fixed size,
+        // especially when the content may be large.
+        // This will slow down the deserialization, use LazySeq if possible.
         val elemTyProj = typeArgs[0]
         val elemTy = elemTyProj.type ?: throw IllegalArgumentException("Unable to decode a star type")
         return bytes.readMany { _, _ -> parse(elemTy, this) }
@@ -174,7 +177,7 @@ fun LittleEndianDataInputStream.readIntFloatPair(): IntFloatPair {
 
 /**
  * Read many [R] from current stream, the next [Int] must indicates the number of [R]
- * First parameter is index, the second is beatmap count.
+ * First parameter is index, the second one is amount.
  */
 fun <R> LittleEndianDataInputStream.readMany(builder: LittleEndianDataInputStream.(Int, Int) -> R): ImmutableSeq<R> {
   val many = readInt()
@@ -297,8 +300,6 @@ interface LocalOsuParseListener {
   }
 }
 
-// FIXME: why this so slow...
-// possible issue: ModdedStarCache is too big (all combinations of difficulty change mods), or deserializing ModdedStarCache is slow, as it converts Int to MutableEnumSet<Mod>
 fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseListener): LocalOsu {
   val version = bytes.readInt()
   val folderCount = bytes.readInt()

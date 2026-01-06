@@ -103,7 +103,7 @@ class BeatmapCollectionActions(
     val result = prepare(beatmapProvider)
     if (result === collection.beatmaps) return collection
     
-    // some cache is filled, write to user
+    // some cache is filled
     val collection = collection.copy(beatmaps = result)
     collectionFilePath?.writeText(commonSerde.encodeToString(collection))
     return collection
@@ -156,28 +156,27 @@ class BeatmapCollectionActions(
       throw IOException("Output directory $outDir exists and is not empty, abort.")
     }
     
-    // TODO: replace with BeatmapProvider
-    val fill = prepareDirty(beatmapProvider)
+    val collection = prepareDirty(beatmapProvider)
     val byHash = localScores.scoredBeatmaps.associateBy { it.md5Hash }
     val filterMask = Mod.toBitMask(filter)
     
     var success = true
     
-    if (collection.beatmaps.size() != 0) {
-      progressIndicator.progress(1, collection.beatmaps.size(), TITLE_EXPORT_FIND, null)
-    }
+    // TODO: replace with AccumulateProgressIndicator
+    val pi = AccumulateProgressIndicator(progressIndicator)
+    pi.init(collection.beatmaps.size(), TITLE_EXPORT_FIND, null)
     
     val highestScores = collection.beatmaps.mapIndexed { idx, it ->
       val cache = it.cache
       if (cache == null) {
-        progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, "Skip")
+        pi.progress("Skip")
         success = false
         null
       } else {
         val scores = byHash.getOrNull(cache.md5Hash)
         if (scores == null) {
           System.err.println("Beatmap with id $it has no score.")
-          progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, "Skip")
+          pi.progress("Skip")
           success = false
           null
         } else {
@@ -187,7 +186,7 @@ class BeatmapCollectionActions(
           
           val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.asSeq(highest.mods), cache)
           
-          progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_FIND, subtitle)
+          pi.progress(subtitle)
           highest
         }
       }
@@ -195,7 +194,7 @@ class BeatmapCollectionActions(
     
     outDir.createDirectories()
     
-    progressIndicator.progress(1, collection.beatmaps.size(), TITLE_EXPORT_EXPORT, null)
+    pi.init(collection.beatmaps.size(), TITLE_EXPORT_EXPORT, null)
     
     highestScores.forEachIndexed { idx, it ->
       if (it != null) {
@@ -214,12 +213,12 @@ class BeatmapCollectionActions(
               )
             }"
           )
-          progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_EXPORT, "Skip")
+          pi.progress("Skip")
           success = false
         } else {
           val target = replayFileName(beatmap, it) + ".osr"
           found.copyTo(outDir.resolve(target))
-          progressIndicator.progress(idx + 1, collection.beatmaps.size(), TITLE_EXPORT_EXPORT, target)
+          pi.progress(target)
         }
       }
     }
@@ -249,7 +248,7 @@ class BeatmapCollectionActions(
   }
   
   /**
-   * Download all beatmap in collection to [outDir]
+   * Download all beatmap in collection to [outDir]wata
    * @param outDir target directory, can be absent or dirty
    */
   fun download(outDir: Path, beatmapProvider: BeatmapProvider) {
@@ -295,7 +294,7 @@ class BeatmapCollectionActions(
             )
           )
         } else {
-          throw RuntimeException("Unexpected ${resp.statusCode()}, this could be sayobot changes their download strategy, skip.")
+          throw RuntimeException("Unexpected ${resp.statusCode()}, this could be sayobot changes their download strategy.")
         }
       }
     }

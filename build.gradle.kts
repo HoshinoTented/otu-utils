@@ -13,6 +13,10 @@ version = projectVersion
 
 application.mainClass.set("com.github.hoshinotented.osuutils.cli.MainKt")
 
+tasks.named<JavaExec>("run") {
+  standardInput = System.`in`
+}
+
 repositories {
   mavenCentral()
 }

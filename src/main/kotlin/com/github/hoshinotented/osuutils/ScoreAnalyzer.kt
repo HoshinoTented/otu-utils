@@ -8,6 +8,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.Mod
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
+import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Duration.Companion.seconds

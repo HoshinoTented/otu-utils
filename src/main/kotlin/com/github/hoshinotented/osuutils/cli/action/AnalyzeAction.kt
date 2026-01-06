@@ -13,6 +13,8 @@ import com.github.hoshinotented.osuutils.prettyTime
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
 import com.github.hoshinotented.osuutils.providers.ScoreHistoryProvider
 import com.github.hoshinotented.osuutils.providers.ScoreProvider
+import com.github.hoshinotented.osuutils.util.AccumulateProgressIndicator
+import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.mutable.MutableList
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -24,6 +26,7 @@ class AnalyzeAction(
   historyDatabase: ScoreHistoryDatabase,
   val beatmapProvider: BeatmapProvider,
   val scoreProvider: ScoreProvider,
+  val progressIndicator: ProgressIndicator,
   val options: Options = Options(false),
 ) {
   data class Options(val showRecentUnplayed: Boolean)
@@ -35,10 +38,14 @@ class AnalyzeAction(
     val trackingBeatmaps = historyProvider.historyDB.tracking().beatmaps
     val histories = historyProvider.histories()
     val analyzeId = analyzeDatabase.load().lastId + 1
+    val pi = AccumulateProgressIndicator(progressIndicator)
+    pi.init(histories.size(), "Fetch Scores", null)
     
     val scores = histories.map {
-      scoreProvider.beatmapScores(user, it.beatmapId)
+      val scores = scoreProvider.beatmapScores(user, it.beatmapId)
         ?: throw IllegalArgumentException("No such beatmap ${it.beatmapId}, make sure you have correct beatmap id in the tracking list.")
+      pi.progress(it.beatmapId.toString())
+      scores
     }
     
     val analyzer = ScoreAnalyzer(histories, scores, analyzeId)

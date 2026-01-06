@@ -13,7 +13,7 @@ class UserDatabase(profileDir: Path) {
   }
   
   fun save(user: User) {
-    userCache.save(user)
+    userCache.set(user)
   }
   
   fun save() {

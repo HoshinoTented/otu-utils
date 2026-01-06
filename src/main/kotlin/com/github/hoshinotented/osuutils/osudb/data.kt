@@ -27,6 +27,9 @@ data class ModStarCache(val mods: MutableEnumSet<Mod>, val difficulty: Float)
 @Sized(bytes = 17)
 data class TimePoint(val bpm: Double, val offset: Double, val inherit: Boolean)
 
+/**
+ * @param T must be [Sized]
+ */
 class LazySeq<T>(val initializer: Lazy<ImmutableSeq<T>>) : SeqView<T> {
   val value: ImmutableSeq<T> get() = initializer.value
   

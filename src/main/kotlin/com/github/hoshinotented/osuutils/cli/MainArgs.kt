@@ -45,7 +45,10 @@ abstract class MainArgs : Callable<Int> {
   
   @CommandLine.Option(
     names = ["--dry-run"],
-    description = ["Don't update almost any data to disk (except user token cause this is very important, '-o' still work)"]
+    description = [
+      "Don't update most thing to disk (except user token cause this is very important),",
+      "this doesn't include user specified outputs, such as '-o'"
+    ]
   )
   var dryRun: Boolean = false
   

@@ -68,10 +68,15 @@ interface ProgressIndicator {
 
 class AccumulateProgressIndicator(val delegate: ProgressIndicator) : ProgressIndicator by delegate {
   private var title: String? = null
+  
+  // current progress
   private var acc: Int = 0
+  
+  // max progress
   private var max: Int = 0
   
   fun init(max: Int, title: String?, subtitle: String?) {
+    this.acc = 0
     this.max = max
     
     if (max != 0) {
@@ -82,6 +87,7 @@ class AccumulateProgressIndicator(val delegate: ProgressIndicator) : ProgressInd
   
   fun progress(subtitle: String?) {
     if (acc < max) {
+      // acc + 1 <= max
       progress(++acc, max, title, subtitle)
     } else {
       throw IllegalStateException("Current counter: $acc while max at $max")
