@@ -61,7 +61,7 @@ sealed interface MCExpr {
     }
   }
   
-  data class Context(val matched: MutableEnumSet<Mod>)
+  data class Context(var matched: MutableEnumSet<Mod>)
   
   /**
    * @return if success
@@ -91,9 +91,12 @@ sealed interface MCExpr {
   
   data class Or(val lhs: MCExpr, val rhs: MCExpr) : MCExpr {
     override fun accept(mods: MutableEnumSet<Mod>, context: Context): Boolean {
-      return if (lhs.accept(mods, context)) true else {
-        rhs.accept(mods, context)
-      }
+      val savePoint = context.matched.clone()
+      if (lhs.accept(mods, context)) return true
+      context.matched = MutableEnumSet.from(Mod::class.java, savePoint)
+      if (rhs.accept(mods, context)) return true
+      context.matched = MutableEnumSet.from(Mod::class.java, savePoint)
+      return false
     }
   }
   

@@ -51,6 +51,7 @@ class ModCombinationTest {
     test("{ { HD }, { HR } }", HD)
     test("{ { HD }, { HR } }", HR)
     test("{ { HD }, { HR } }", HD, HR)
+    
   }
   
   @Test
@@ -61,5 +62,7 @@ class ModCombinationTest {
     test("!{ HD }", expect = MCExpr.TestResult.TooFew)
     test("!{ HD }HR", HR, expect = MCExpr.TestResult.TooFew)
     test("{ HD, HR }", HD, DT, expect = MCExpr.TestResult.TooMany)
+    // '|' must restore state when fail, in case `{ HD }EZ` failed but `HD` is considered matched
+    test("({ HD }EZ)|HR", HD, HR, expect = MCExpr.TestResult.TooMany)
   }
 }
