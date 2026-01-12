@@ -4,6 +4,7 @@ plugins {
   kotlin("plugin.serialization") version "2.2.21"
   kotlin("kapt") version "2.2.21"
   application
+  antlr
 }
 
 val projectVersion: String = libs.versions.project.get()
@@ -34,6 +35,7 @@ dependencies {
   implementation(libs.jfreechart)
   implementation(libs.guava)
   implementation(libs.sqlite)
+  antlr("org.antlr:antlr4:4.5")
   
   kapt(libs.picocli.codegen)
   
@@ -50,6 +52,7 @@ kapt {
 
 tasks.test {
   useJUnitPlatform()
+  enableAssertions = true
 }
 
 kotlin {
@@ -93,4 +96,8 @@ tasks.register<Jar>("fatJar") {
 
 tasks.compileJava {
   dependsOn(generateVersion)
+}
+
+tasks.withType<AntlrTask> {
+  this.packageName.set("com.github.hoshinotented.osuutils.parser")
 }

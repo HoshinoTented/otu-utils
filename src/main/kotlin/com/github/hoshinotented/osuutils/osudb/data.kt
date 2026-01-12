@@ -31,6 +31,9 @@ data class TimePoint(val bpm: Double, val offset: Double, val inherit: Boolean)
  * @param T must be [Sized]
  */
 class LazySeq<T>(val initializer: Lazy<ImmutableSeq<T>>) : SeqView<T> {
+  /**
+   * May fail
+   */
   val value: ImmutableSeq<T> get() = initializer.value
   
   override fun iterator(): MutableIterator<T> {

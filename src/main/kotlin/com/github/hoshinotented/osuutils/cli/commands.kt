@@ -210,15 +210,34 @@ abstract class CommandBeatmapCollectionArgs() {
   )
   var pathToNewCollection: File? = null
   
+  @CommandLine.Option(
+    names = ["-f", "--force"],
+    description = ["Ignore beatmap information cache and force to re-fetch"]
+  )
+  var force: Boolean = false
+  
+  @CommandLine.Option(
+    names = ["--fill-mods"],
+    description = ["Fill 'modSets' field in beatmap collection by the tag of beatmaps, only available if '-o' is specified"]
+  )
+  var fillMods = false
+  
   fun beatmapCollection(): BeatmapCollection {
     return commonSerde.decodeFromString<BeatmapCollection>(pathToCollection.readText())
+  }
+  
+  fun action(): BeatmapCollectionActions {
+    return BeatmapCollectionActions(
+      pathToNewCollection?.toPath(), force, fillMods, beatmapCollection(),
+      ProgressIndicator.Console
+    )
   }
 }
 
 @CommandLine.Command(name = "info-collection", description = ["Print information of a beatmap collection"])
 class CommandBeatmapCollectionInfo() : CommandBeatmapCollectionArgs(), Callable<Int> {
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(pathToNewCollection?.toPath(), beatmapCollection(), ProgressIndicator.Console)
+    val action = action()
     val success = action.info(beatmapProvider)
     
     if (success) 0 else 1
@@ -226,17 +245,21 @@ class CommandBeatmapCollectionInfo() : CommandBeatmapCollectionArgs(), Callable<
 }
 
 @CommandLine.Command(
-  name = "export-collection-score",
-  description = ["Export highest score in collection from local osu!, NFV2 must on"]
+  name = "collection-scores",
+  description = ["List highest score in collection from local osu!, V2 must on"]
 )
 class CommandBeatmapCollectionExport() : CommandBeatmapCollectionArgs(), Callable<Int> {
-  @CommandLine.Parameters(index = "1", paramLabel = "DIRECTORY", description = ["Path to export output directory"])
-  lateinit var outDir: File
+  @CommandLine.Option(
+    names = ["-e", "--export"],
+    paramLabel = "DIRECTORY",
+    description = ["Export replays to given directory."]
+  )
+  var export: File? = null
   
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(pathToNewCollection?.toPath(), beatmapCollection(), ProgressIndicator.Console)
+    val action = action()
     val success =
-      action.export(localOsuPath(), beatmapProvider, localScores, outDir.toPath(), ImmutableSeq.of(Mod.NF, Mod.V2))
+      action.scores(localOsuPath(), beatmapProvider, localScores, export?.toPath(), ImmutableSeq.of(Mod.V2))
     
     if (success) 0 else 1
   }
@@ -261,7 +284,7 @@ class CommandBeatmapCollectionDownload : Callable<Int> {
   }
   
   override fun call(): Int = parent.catching {
-    val action = BeatmapCollectionActions(null, beatmapCollection(), ProgressIndicator.Console)
+    val action = BeatmapCollectionActions(null, false, false, beatmapCollection(), ProgressIndicator.Console)
     action.download(outDir.toPath(), beatmapProvider)
     0
   }

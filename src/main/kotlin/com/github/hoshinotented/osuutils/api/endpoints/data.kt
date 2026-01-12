@@ -2,8 +2,8 @@
 
 package com.github.hoshinotented.osuutils.api.endpoints
 
+import com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores
 import com.github.hoshinotented.osuutils.data.IBeatmap
-import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyMods
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
@@ -66,9 +66,6 @@ data class Score(
       return String.format("%+2.2f%%", bias * 100)
     }
     
-    /**
-     * @param beatmap TODO abstraction...
-     */
     fun prettyScore(score: Int, accuracy: Float, mods: ImmutableSeq<Mod>, beatmap: IBeatmap): String {
       return buildString {
         append("$score ${prettyAcc(accuracy)} ")

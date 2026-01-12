@@ -109,8 +109,6 @@ class AnalyzeAction(
     return reportBuffer.toString()
   }
   
-  // TODO: not good, if a score history is not updated in previous analyze, it will also be modified
-  //       I guess we need to store the time when we analyze, or an id
   fun removeLastAnalyze(analyzeId: Int?) {
     val histories = historyProvider.histories()
     val analyzeId = analyzeId ?: analyzeDatabase.load().lastId

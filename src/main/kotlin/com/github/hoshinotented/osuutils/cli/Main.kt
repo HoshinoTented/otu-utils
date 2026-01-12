@@ -80,6 +80,9 @@ class Main : MainArgs() {
     if (!verbose) {
       OsuApi.logger.level = Level.OFF
       cliLogger.level = Level.OFF
+    } else {
+      OsuApi.logger.level = Level.ALL
+      cliLogger.level = Level.ALL
     }
   }
   

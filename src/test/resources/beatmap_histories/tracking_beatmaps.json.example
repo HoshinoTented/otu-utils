@@ -1,6 +1,10 @@
-[
-  {
-    "id": 114514,           // beatmap id, remember to remove this comment
-    "comment": "your comment to the beatmap, can be null"
-  }
-]
+{
+  "name": "Beatmap Collection Example",
+  "author": "Unknown",
+  "beatmaps": [
+    {
+      "id": 114514,           // beatmap id, remember to remove this comment
+      "comment": "your comment to the beatmap, can be null"
+    }
+  ]
+}

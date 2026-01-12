@@ -1,9 +1,10 @@
-@file:UseSerializers(SeqSerializer::class)
+@file:UseSerializers(SeqSerializer::class, ModRestriction.Serde::class)
 
 package com.github.hoshinotented.osuutils.data
 
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
+import com.github.hoshinotented.osuutils.util.ModRestriction
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -32,17 +33,16 @@ data class BeatmapInfoCache(
 /**
  * @param id the beatmap id
  * @param tag the tag of beatmap in pool, such as `NM1`. This is used for generating score list.
+ * @param mods allowed mods combination, see [ModRestriction]
  */
 @Serializable
 data class BeatmapInCollection(
   val id: BeatmapId,
   val tag: String?,
   val comment: String?,
+  val mods: ModRestriction?,
   val cache: BeatmapInfoCache?,
 )
 
-/**
- * TODO: unify with [com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase.TrackBeatmaps]
- */
 @Serializable
 data class BeatmapCollection(val name: String, val author: String, val beatmaps: ImmutableSeq<BeatmapInCollection>)

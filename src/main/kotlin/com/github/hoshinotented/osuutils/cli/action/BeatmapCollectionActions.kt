@@ -14,6 +14,9 @@ import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyMods
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
 import com.github.hoshinotented.osuutils.util.AccumulateProgressIndicator
+import com.github.hoshinotented.osuutils.util.MCExpr
+import com.github.hoshinotented.osuutils.util.MCExpr.Companion.test
+import com.github.hoshinotented.osuutils.util.ModRestriction
 import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.immutable.ImmutableSeq
 import java.io.IOException
@@ -23,6 +26,7 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.Locale
 import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -36,6 +40,8 @@ import kotlin.jvm.optionals.getOrNull
  */
 class BeatmapCollectionActions(
   val collectionFilePath: Path?,
+  val force: Boolean,
+  val fillMods: Boolean,
   val collection: BeatmapCollection,
   val progressIndicator: ProgressIndicator,
 ) {
@@ -44,6 +50,8 @@ class BeatmapCollectionActions(
     const val TITLE_EXPORT_FIND = "Find Highest Score"
     const val TITLE_EXPORT_EXPORT = "Export Highest Score"
     const val TITLE_DOWNLOAD = "Download Beatmap"
+    
+    val TAG_PATTERN = Regex("([a-zA-Z]+)(\\d+)")
     
     fun replayFileName(beatmap: IBeatmap, score: LocalScore): String {
       val components = ImmutableSeq.of(
@@ -58,6 +66,18 @@ class BeatmapCollectionActions(
       
       return components.joinToString("-")
     }
+    
+    fun tagToMods(tag: String): String? {
+      return when (tag.uppercase(Locale.ENGLISH)) {
+        "NM" -> "NM"
+        "HD" -> "HD"
+        "HR" -> "HR"
+        "DT" -> "DT|NC"
+        "FM" -> "{ HD, HR }"
+        "TB" -> "{ HD, HR }"
+        else -> null
+      }
+    }
   }
   
   /**
@@ -71,23 +91,44 @@ class BeatmapCollectionActions(
     
     var changed = false
     val result = collection.beatmaps.mapIndexed { idx, it ->
-      if (it.cache != null) {
+      var beatmap = it
+      val tag = beatmap.tag
+      if (fillMods && tag != null && it.mods == null) {
+        val matchResult = TAG_PATTERN.matchEntire(tag)
+        if (matchResult != null) {
+          val modTag = matchResult.groups[1]!!.value
+          val modRestriction = tagToMods(modTag)
+          if (modRestriction != null) {
+            changed = true
+            beatmap = beatmap.copy(mods = ModRestriction(modRestriction))
+          }
+        }
+      }
+      
+      if (!force && beatmap.cache != null) {
         pi.progress("Cache hit for $idx, skip")
-        it
+        beatmap
       } else {
-        val cache = beatmapProvider.beatmap(it.id)?.let { beatmap ->
+        val cache = beatmapProvider.beatmap(beatmap.id)?.let { beatmap ->
           val set = beatmap.beatmapSet!!
-          BeatmapInfoCache(it.id, set.title, set.titleUnicode, beatmap.version, beatmap.difficulty, beatmap.checksum!!)
+          BeatmapInfoCache(
+            beatmap.id,
+            set.title,
+            set.titleUnicode,
+            beatmap.version,
+            beatmap.difficulty,
+            beatmap.checksum!!
+          )
         }
         
         if (cache == null) {
           System.err.println("Cannot find beatmap $idx")
           pi.progress("Cannot find beatmap $idx")
-          it
+          beatmap
         } else {
           pi.progress(prettyBeatmap(cache.titleUnicode ?: cache.title, cache.difficultyName, cache.starRate))
           changed = true
-          it.copy(cache = cache)
+          beatmap.copy(cache = cache)
         }
       }
     }
@@ -141,17 +182,17 @@ class BeatmapCollectionActions(
   }
   
   /**
-   * @param filter scores with at least those [Mod]s on will be counted
+   * @param filter scores with at least those [Mod]s on will be counted.
    * @return if success
    */
-  fun export(
+  fun scores(
     localOsuPath: Path,
     beatmapProvider: BeatmapProvider,
     localScores: LocalScores,
-    outDir: Path,
+    outDir: Path?,
     filter: ImmutableSeq<Mod>, // we DO can use EnumSet, but i just don't
   ): Boolean {
-    if (outDir.exists() && Files.newDirectoryStream(outDir).use { it.iterator().hasNext() }) {
+    if (outDir != null && outDir.exists() && Files.newDirectoryStream(outDir).use { it.iterator().hasNext() }) {
       // outDir is dirty
       throw IOException("Output directory $outDir exists and is not empty, abort.")
     }
@@ -162,11 +203,10 @@ class BeatmapCollectionActions(
     
     var success = true
     
-    // TODO: replace with AccumulateProgressIndicator
     val pi = AccumulateProgressIndicator(progressIndicator)
     pi.init(collection.beatmaps.size(), TITLE_EXPORT_FIND, null)
     
-    val highestScores = collection.beatmaps.mapIndexed { idx, it ->
+    val highestScores = collection.beatmaps.map {
       val cache = it.cache
       if (cache == null) {
         pi.progress("Skip")
@@ -175,50 +215,64 @@ class BeatmapCollectionActions(
       } else {
         val scores = byHash.getOrNull(cache.md5Hash)
         if (scores == null) {
-          System.err.println("Beatmap with id $it has no score.")
+          System.err.println("Beatmap with id ${it.id} has no score.")
           pi.progress("Skip")
           success = false
           null
         } else {
+          val modRestriction = it.mods
           val highest = scores.scores
-            .filter { (it.mods and filterMask) == filterMask }
-            .maxBy { it.score }
+            .filter { s ->
+              (s.mods and filterMask) == filterMask
+                      && (modRestriction == null || modRestriction.compiled.test(Mod.asSeq(s.mods)) == MCExpr.TestResult.Success)
+            }
+            .takeIf { it.isNotEmpty }
+            ?.maxBy { s -> s.score }
           
-          val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.asSeq(highest.mods), cache)
-          
-          pi.progress(subtitle)
-          highest
+          if (highest == null) {
+            System.err.println("Beatmap with id ${it.id} has no score with mod restriction: V2${it.mods?.code ?: ""}")
+            pi.progress("Skip")
+            success = false
+            null
+          } else {
+            val subtitle = Score.prettyScore(highest.score, highest.accuracy, Mod.asSeq(highest.mods), cache)
+            
+            pi.progress(subtitle)
+            highest
+          }
         }
       }
     }
     
-    outDir.createDirectories()
-    
-    pi.init(collection.beatmaps.size(), TITLE_EXPORT_EXPORT, null)
-    
-    highestScores.forEachIndexed { idx, it ->
-      if (it != null) {
-        val beatmapInCollection = collection.beatmaps[idx]
-        val beatmap = beatmapInCollection.cache!!   // never null, it != null implies cache != null
-        
-        val found = findReplay(localOsuPath, it.beatmapMd5Hash, it.replayMd5Hash)
-        if (found == null) {
-          System.err.println(
-            "Cannot find replay for score: ${
-              Score.prettyScore(
-                it.score,
-                it.accuracy,
-                Mod.asSeq(it.mods),
-                beatmap
-              )
-            }"
-          )
-          pi.progress("Skip")
-          success = false
-        } else {
-          val target = replayFileName(beatmap, it) + ".osr"
-          found.copyTo(outDir.resolve(target))
-          pi.progress(target)
+    if (outDir != null) {
+      outDir.createDirectories()
+      
+      pi.init(collection.beatmaps.size(), TITLE_EXPORT_EXPORT, null)
+      
+      highestScores.forEachIndexed { idx, it ->
+        if (it != null) {
+          val beatmapInCollection = collection.beatmaps[idx]
+          val beatmap = beatmapInCollection.cache!!   // never null, it != null implies cache != null
+          
+          val found = findReplay(localOsuPath, it.beatmapMd5Hash, it.replayMd5Hash)
+          if (found == null) {
+            System.err.println(
+              "Cannot find replay for score: ${
+                Score.prettyScore(
+                  it.score,
+                  it.accuracy,
+                  Mod.asSeq(it.mods),
+                  beatmap
+                )
+              }"
+            )
+            pi.progress("Skip")
+            success = false
+          } else {
+            val target = replayFileName(beatmap, it) + ".osr"
+            found.copyTo(outDir.resolve(target))
+            pi.progress(target)
+          }
         }
       }
     }

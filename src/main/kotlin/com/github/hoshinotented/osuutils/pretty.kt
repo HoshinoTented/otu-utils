@@ -19,9 +19,9 @@ fun prettyBeatmap(set: BeatmapSet, map: Beatmap): String {
   return prettyBeatmap(set.title, map.version, map.difficulty)
 }
 
-fun prettyBeatmap(local: LocalBeatmap): String {
-  return prettyBeatmap(local.titleUnicode ?: local.title, local.difficultyName, local.starRate())
-}
+//fun prettyBeatmap(local: LocalBeatmap): String {
+//  return prettyBeatmap(local.titleUnicode ?: local.title, local.difficultyName, local.starRate())
+//}
 
 fun prettyBeatmap(title: String, difficultyName: String, starRate: Float): String {
   return "$title / $difficultyName / ${Beatmap.prettyDifficulty(starRate)}"
@@ -33,8 +33,7 @@ fun prettyBeatmap(beatmap: IBeatmap): String {
 
 
 fun prettyTime(time: Instant): String {
-  return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-    .withLocale(Locale.getDefault())
+  return DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")
     .withZone(ZoneId.systemDefault())
     .format(time.toJavaInstant())
 }

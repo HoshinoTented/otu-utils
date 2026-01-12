@@ -1,8 +1,8 @@
 package com.github.hoshinotented.osuutils.api.endpoints
 
 import kala.collection.immutable.ImmutableSeq
-import kala.collection.mutable.FreezableMutableList
 import kala.collection.mutable.MutableEnumSet
+import java.util.function.Predicate
 
 enum class Mode {
   Osu;
@@ -75,5 +75,43 @@ enum class Mod {
       
       return bits
     }
+    
+    val DIFFICULTY_CHANGE_MODS = ImmutableSeq.of(EZ, HT, HR, HD, DT, NC, TD)
+  }
+}
+
+/**
+ * [Predicate.or], [Predicate.and], [ModCombination.of] and [ModCombination.combination] can cover all combination.
+ */
+sealed interface ModCombination : Predicate<ImmutableSeq<Mod>> {
+  /**
+   * Check if given mod combination satisfies [this] ModCombination. Only difficulty change mods have effect
+   */
+  override fun test(mods: ImmutableSeq<Mod>): Boolean
+  
+  class Exact(val exact: MutableEnumSet<Mod>) : ModCombination {
+    /**
+     * @return true if [mods] is exact the same as [exact]
+     */
+    override fun test(mods: ImmutableSeq<Mod>): Boolean {
+      return exact == MutableEnumSet.from(Mod::class.java, mods.filter { it in Mod.DIFFICULTY_CHANGE_MODS })
+    }
+  }
+  
+  class Combination(val comb: MutableEnumSet<Mod>) : ModCombination {
+    /**
+     * @return true if [mods] is a subset of [comb]
+     */
+    override fun test(mods: ImmutableSeq<Mod>): Boolean {
+      return mods.containsAll(mods.filter { it in Mod.DIFFICULTY_CHANGE_MODS })
+    }
+  }
+  
+  companion object {
+    fun of(exact: ImmutableSeq<Mod>): ModCombination =
+      Exact(MutableEnumSet.from(Mod::class.java, exact.filter { it in Mod.DIFFICULTY_CHANGE_MODS }))
+    
+    fun combination(mods: ImmutableSeq<Mod>): ModCombination =
+      Combination(MutableEnumSet.from(Mod::class.java, mods.filter { it in Mod.DIFFICULTY_CHANGE_MODS }))
   }
 }

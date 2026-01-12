@@ -4,6 +4,7 @@ package com.github.hoshinotented.osuutils.database
 
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.commonSerde
+import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.io.FileIO
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
@@ -11,34 +12,32 @@ import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableMap
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
+import java.io.IOException
 import java.nio.file.Path
 
 /**
  * @param historyDir must exist
  */
 class ScoreHistoryDatabase(val historyDir: Path, val io: FileIO) {
-  @Serializable
-  data class TrackBeatmap(val id: BeatmapId, val comment: String?)
-  
-  data class TrackBeatmaps(
-    val beatmaps: ImmutableSeq<TrackBeatmap>,
-  )
-  
   val trackingMapsPath: Path = historyDir.resolve("tracking_beatmaps.json")
   
-  lateinit var trackBeatmapsCache: TrackBeatmaps
+  lateinit var trackBeatmapsCache: BeatmapCollection
   val scoreHistoryCache = MutableMap.create<BeatmapId, ScoreHistory>()
   
-  fun tracking(): TrackBeatmaps {
+  fun trackingMaybe(): BeatmapCollection? {
     if (::trackBeatmapsCache.isInitialized) return trackBeatmapsCache
     
     if (!io.exists(trackingMapsPath)) {
-      return TrackBeatmaps(ImmutableSeq.empty())
+      return null
     }
     
     val json = io.readText(trackingMapsPath)
-    val data = commonSerde.decodeFromString(SeqSerializer(TrackBeatmap.serializer()), json)
-    return TrackBeatmaps(data)
+    trackBeatmapsCache = commonSerde.decodeFromString(json)
+    return trackBeatmapsCache
+  }
+  
+  fun tracking(): BeatmapCollection {
+    return trackingMaybe() ?: throw IOException("'tracking_beatmaps.json' is not found")
   }
   
   fun load(beatmapId: BeatmapId): ScoreHistory {
