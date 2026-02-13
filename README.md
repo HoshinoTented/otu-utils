@@ -38,5 +38,7 @@ Commands:
   rollback                 回滚一次分析
   render-scores            根据特定谱面的分数渲染图表
   info-collection          输出谱面包信息
-  export-collection-score  从本地 osu! 中导出谱面包中谱面的对应最高分数，分数必须至少使用 NFV2 才会被计入
+  export-collection-score  从本地 osu! 中导出谱面包中谱面的对应最高分数，分数必须至少使用 V2 才会被计入
 ```
+
+本地 osu! 的数据不会立刻更新（比如分数），你可能需要关闭正在运行的 osu! 来更新本地数据。

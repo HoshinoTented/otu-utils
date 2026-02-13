@@ -10,6 +10,7 @@ import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
 import kotlin.time.Instant
 
@@ -27,7 +28,7 @@ data class ScoreUserAttribute(val pin: Pin) {
 }
 
 /**
- * @param id the id of score
+ * @param id the id of score, this value may invalid, such as local scores
  * @param currentUserAttribute set when requested from [com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores]
  */
 @Serializable
@@ -79,6 +80,8 @@ data class Score(
       }
     }
   }
+
+  val isLocal: Boolean get() = id > 0
 }
 
 @Serializable

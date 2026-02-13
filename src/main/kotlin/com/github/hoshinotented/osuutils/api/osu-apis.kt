@@ -16,6 +16,8 @@ import com.github.hoshinotented.osuutils.api.endpoints.Type
 import com.github.hoshinotented.osuutils.api.endpoints.Users
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.api.endpoints.ScoreId
+import com.github.hoshinotented.osuutils.data.ClientToken
+import com.github.hoshinotented.osuutils.data.IToken
 import com.github.hoshinotented.osuutils.data.Token
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
@@ -40,6 +42,9 @@ data class OsuApplication(
 ) {
   @Transient
   var dontRefreshToken = false
+
+  @Transient
+  var token: ClientToken? = null
 }
 
 object OsuApi {
@@ -90,6 +95,20 @@ object OsuApi {
     
     return token
   }
+
+  fun OsuApplication.clientGrantToken(): ClientToken {
+    val req = OAuth2Endpoints.ClientToken(clientId, clientSecret)
+      .toRequest()
+      .build()
+
+    val resp = client.send(req, HttpResponse.BodyHandlers.ofString())
+      .successOrThrow()
+
+    val createTime = Clock.System.now()
+    val respObj = deJson.decodeFromString<OAuth2Endpoints.ClientTokenResponse>(resp)
+
+    return ClientToken(createTime, respObj.expiresIn, respObj.accessToken)
+  }
   
   /**
    * @throws HttpException
@@ -123,7 +142,7 @@ object OsuApi {
    * @return response and token (may be fresh)
    * @throws HttpException
    */
-  fun OsuApplication.sendAuthedRequest(token: Token, req: HttpRequest.Builder): HttpResponse<String> {
+  fun OsuApplication.sendAuthedRequest(token: IToken, req: HttpRequest.Builder): HttpResponse<String> {
     val token = token
     var resp = client.send(
       req.oauth(token).build(),
@@ -132,7 +151,7 @@ object OsuApi {
     
     if (resp.statusCode() == 401) {
       // try refresh
-      refreshToken(token)
+      token.refresh(this)
       resp = client.send(
         req.oauth(token).build(),
         HttpResponse.BodyHandlers.ofString()

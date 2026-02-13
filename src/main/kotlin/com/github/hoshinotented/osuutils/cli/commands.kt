@@ -29,7 +29,7 @@ class CommandAuth() : Callable<Int> {
     val app = app()
     val existUser = userDB.load()
     if (existUser != null) {
-      println("Existing user in ${userProfile}, overwrite? [Y/N]")
+      println("Existing user in ${profile}, overwrite? [Y/N]")
       val line = readlnOrNull()
       if (line == null || (line != "Y" && line != "y")) {
         println("Terminated")

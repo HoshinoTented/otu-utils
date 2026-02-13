@@ -51,6 +51,10 @@ enum class Mod {
     fun asSeq(bits: Int): ImmutableSeq<Mod> {
       return asSet(bits).toSeq()
     }
+
+    fun has(bits: Int, mod: Mod): Boolean {
+      return bits and (1 shl mod.ordinal) != 0
+    }
     
     fun asSet(bits: Int): MutableEnumSet<Mod> {
       val set = MutableEnumSet.create(Mod::class.java)

@@ -1,5 +1,6 @@
 package com.github.hoshinotented.osuutils.api
 
+import com.github.hoshinotented.osuutils.data.IToken
 import com.github.hoshinotented.osuutils.data.Token
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -14,6 +15,6 @@ fun HttpResponse<String>.checkNotFound(): HttpResponse<String>? {
   return this
 }
 
-fun HttpRequest.Builder.oauth(token: Token): HttpRequest.Builder = apply {
+fun HttpRequest.Builder.oauth(token: IToken): HttpRequest.Builder = apply {
   setHeader("Authorization", "Bearer ${token.accessToken}")
 }

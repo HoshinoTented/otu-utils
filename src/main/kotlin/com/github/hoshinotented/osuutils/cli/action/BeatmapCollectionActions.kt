@@ -60,8 +60,9 @@ class BeatmapCollectionActions(
         Score.rawAcc(score.accuracy),
         prettyMods(Mod.asSeq(score.mods), prefix = ""),
         beatmap.beatmapId().toString(),
-        beatmap.title(),
-        beatmap.difficultyName()
+        // i don't want to \escape those stupid character
+//        beatmap.title(),
+//        beatmap.difficultyName()
       )
       
       return components.joinToString("-")
@@ -84,6 +85,8 @@ class BeatmapCollectionActions(
    * Fill [com.github.hoshinotented.osuutils.data.BeatmapInCollection.cache],
    * note that it is possible that some [BeatmapInCollection.cache] is still null,
    * which means the beatmap id is invalid
+   *
+   * TODO: we can make a BeatmapProvider by ImmutableSeq<BeatmapInCollection>
    */
   fun prepare(beatmapProvider: BeatmapProvider): ImmutableSeq<BeatmapInCollection> {
     val pi = AccumulateProgressIndicator(progressIndicator)
@@ -113,6 +116,7 @@ class BeatmapCollectionActions(
           val set = beatmap.beatmapSet!!
           BeatmapInfoCache(
             beatmap.id,
+            beatmap.beatmapSetId,
             set.title,
             set.titleUnicode,
             beatmap.version,

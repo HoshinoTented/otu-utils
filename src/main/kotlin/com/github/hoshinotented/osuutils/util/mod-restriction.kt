@@ -15,6 +15,16 @@ import kotlinx.serialization.encoding.Encoder
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 
+/**
+ * 一个 mod 限制是如下字符串：
+ * * 一个 mod 缩写，有 NM, EZ, HT, HR, HD, DT, NC, TD
+ * * 两个相邻的 mod 限制，如 `HD HR`，空格不是必须的，意味着必须同时使用 HD 和 HR
+ * * 被 `|` 分隔的 mod 限制，如 `HD|HR`，意味着必须使用 HD 或 HR
+ * * 被 `(` `)` 包围的 mod 限制，如 `(HD)`，这在配合其他 mod 限制的时候很有用，比如 `DT(HD|HR)`，意味着必须使用 DTHD 或 DTHR
+ * * 被 `{` `}` 包围的 mod 限制列表，如 `{ HD, HR }`，意味着只能使用这些 mod 的子集，包括空集。如果在前面加上 `!`，那么不允许空集。
+ *
+ * 更多使用例可以查看对应的测试代码。
+ */
 @Serializable
 data class ModRestriction(val code: String) {
   object Serde : KSerializer<ModRestriction> {
@@ -102,7 +112,7 @@ sealed interface MCExpr {
   
   data class Combination(val sets: ImmutableSeq<MCExpr>, val excludeNoMod: Boolean) : MCExpr {
     override fun accept(mods: MutableEnumSet<Mod>, context: Context): Boolean {
-      // excludeNoMod here is interpreted as matched at least one
+      // excludeNoMod here is interpreted as "matched at least one time"
       
       val anyMatch = sets.foldLeft(false) { acc, it ->
         it.accept(mods, context) || acc

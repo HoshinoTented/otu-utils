@@ -10,7 +10,6 @@ object DbMigrate {
   fun main(args: Array<String>) {
     val main = Main().apply {
       profile = File("./src/test/resources")
-      userProfile = File("./src/test/resources")
       initLogger()
     }
     

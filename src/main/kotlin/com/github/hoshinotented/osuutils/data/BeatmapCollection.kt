@@ -2,7 +2,10 @@
 
 package com.github.hoshinotented.osuutils.data
 
+import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
+import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import com.github.hoshinotented.osuutils.util.ModRestriction
 import kala.collection.immutable.ImmutableSeq
@@ -17,6 +20,7 @@ import kotlinx.serialization.UseSerializers
 @Serializable
 data class BeatmapInfoCache(
   val id: BeatmapId,
+  val setId: BeatmapSetId,
   val title: String,
   val titleUnicode: String?,
   val difficultyName: String,
@@ -28,6 +32,10 @@ data class BeatmapInfoCache(
   override fun difficultyName(): String = difficultyName
   override fun starRate(): Float = starRate
   override fun md5Hash(): String = md5Hash
+
+  fun toBeatmap(): Beatmap = Beatmap(
+    setId, id, starRate, difficultyName, BeatmapSet(setId, title, title(), null), md5Hash
+  )
 }
 
 /**

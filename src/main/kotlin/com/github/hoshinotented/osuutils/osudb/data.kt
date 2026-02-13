@@ -11,6 +11,7 @@ import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.api.endpoints.UserId
 import com.github.hoshinotented.osuutils.data.IBeatmap
 import kala.collection.SeqView
+import kala.collection.immutable.ImmutableMap
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Instant
@@ -153,6 +154,9 @@ data class LocalOsu(
       Normal, Moderator, Supporter, Friend, Who, Staff
     }
   }
+
+  val beatmapByHash: ImmutableMap<String, LocalBeatmap> by lazy { beatmaps.associateBy { it.md5Hash } }
+  val beatmapById: ImmutableMap<BeatmapId, LocalBeatmap> by lazy { beatmaps.associateBy { it.beatmapId.toLong() } }
 }
 
 data class LocalScore(
@@ -196,10 +200,21 @@ data class LocalScore(
    * @param beatmapProvider find [Beatmap] by md5 hash
    */
   fun toScore(userId: UserId, beatmapProvider: (String) -> Beatmap?): Score {
+    val beatmap = beatmapProvider(beatmapMd5Hash)
+    if (beatmap != null && beatmap.checksum != null && beatmap.checksum != beatmapMd5Hash) {
+      throw IllegalArgumentException(
+        """
+        Beatmap checksum mismatch.
+        Expected: $beatmapMd5Hash
+        Actual: ${beatmap.checksum}
+      """.trimIndent()
+      )
+    }
+
     return Score(
       accuracy, createTime,
       scoreId, Mod.asSeq(mods), userId,
-      beatmapProvider(beatmapMd5Hash),
+      beatmap,
       null,
       null
     )
