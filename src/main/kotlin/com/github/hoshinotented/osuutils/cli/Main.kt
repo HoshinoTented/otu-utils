@@ -42,14 +42,15 @@ class Main : MainArgs() {
   internal val scoreProvider by lazy {
     when {
       prefer.local -> LocalOsuScoreProvider(localOsu, localScores, true)
-      prefer.remote -> OnlineScoreProvider(app())
-      else -> {
+      prefer.mixed -> {
         val local = LocalOsuScoreProvider(localOsu, localScores, true)
         val online = OnlineScoreProvider(app())
 
         // online before local, as online score provide more information such as score link
         MergeScoreProvider(online, local)
       }
+
+      else -> OnlineScoreProvider(app())
     }
 
   }

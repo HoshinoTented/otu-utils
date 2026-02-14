@@ -75,14 +75,13 @@ abstract class MainArgs : Callable<Int> {
       names = ["--prefer-remote"],
       description = ["Fetch data from osu.ppy.sh, this is the default option"]
     )
-    var remote: Boolean = true
+    var remote: Boolean = false
 
     override fun toString(): String {
       return when {
         local -> "local"
         mixed -> "mixed"
-        remote -> "remote"
-        else -> throw RuntimeException("unreachable")
+        else -> "remote"
       }
     }
   }
