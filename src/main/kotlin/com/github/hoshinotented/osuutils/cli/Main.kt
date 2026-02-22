@@ -109,7 +109,7 @@ class Main : MainArgs() {
   }
   
   override fun call(): Int {
-    cliLogger.info("Profile directory: " + profile.absolutePath)
+    cliLogger.info("Options: $this")
     
     commandSpec.commandLine().usage(System.out)
     return 0

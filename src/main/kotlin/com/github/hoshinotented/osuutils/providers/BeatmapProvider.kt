@@ -91,6 +91,9 @@ class LocalOsuBeatmapProvider(osu: LocalOsu) : BeatmapProvider {
   }
 }
 
+/**
+ * @param force if always re-fill [BeatmapInCollection.cache]
+ */
 class BeatmapCollectionBeatmapProvider(
   collection: ImmutableSeq<BeatmapInCollection>,
   val provider: BeatmapProvider,
@@ -98,8 +101,7 @@ class BeatmapCollectionBeatmapProvider(
 ) : BeatmapProvider {
   val collection: ImmutableSeq<BeatmapInCollection> = collection.map {
     val cache = if (force || it.cache == null) {
-      val beatmap = provider.beatmap(it.id)
-      if (beatmap == null) null else {
+      provider.beatmap(it.id)?.let { beatmap ->
         val set = beatmap.beatmapSet!!
         BeatmapInfoCache(
           beatmap.id,

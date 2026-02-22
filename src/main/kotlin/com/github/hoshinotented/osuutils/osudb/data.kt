@@ -42,7 +42,7 @@ class LazySeq<T>(val initializer: Lazy<ImmutableSeq<T>>) : SeqView<T> {
   }
 }
 
-// Almost everything (stdModdedStarCache and timePoints) with ImmutableSeq is deserialized in slow speed, consider just read bytes and delay the deserialization?
+// Almost everything (stdModdedStarCache and timePoints) with ImmutableSeq is deserialized in a slow speed, consider just read bytes and delay the deserialization?
 data class LocalBeatmap(
   val artist: String,
   val artistUnicode: String?,
@@ -226,4 +226,11 @@ data class LocalScoredBeatmap(val md5Hash: String, val scores: ImmutableSeq<Loca
 data class LocalScores(
   val version: Int,
   val scoredBeatmaps: ImmutableSeq<LocalScoredBeatmap>,
+)
+
+data class LocalCollection(val name: String, val beatmaps: ImmutableSeq<String>)
+
+data class LocalCollections(
+  val version: Int,
+  val collections: ImmutableSeq<LocalCollection>
 )

@@ -18,7 +18,7 @@ import java.util.concurrent.Callable
 import kotlin.io.writeText
 
 @CommandLine.Command(name = "auth")
-class CommandAuth() : Callable<Int> {
+class CommandAuth : Callable<Int> {
   @CommandLine.ParentCommand
   lateinit var parent: Main
   
@@ -49,7 +49,7 @@ class CommandAuth() : Callable<Int> {
 }
 
 @CommandLine.Command(name = "me", description = ["Print user information"])
-class CommandMe() : Callable<Int> {
+class CommandMe : Callable<Int> {
   @CommandLine.ParentCommand
   lateinit var parent: Main
   
@@ -72,7 +72,7 @@ class CommandMe() : Callable<Int> {
 }
 
 @CommandLine.Command(name = "analyze", description = ["Analyze recent scores"])
-class CommandAnalyze() : Callable<Int> {
+class CommandAnalyze : Callable<Int> {
   @CommandLine.ParentCommand
   lateinit var parent: Main
   

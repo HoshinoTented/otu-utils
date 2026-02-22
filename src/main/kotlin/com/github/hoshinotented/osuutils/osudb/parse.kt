@@ -8,7 +8,6 @@ import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
 import kala.collection.mutable.MutableMap
 import java.io.ByteArrayInputStream
-import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Path
 import kotlin.io.path.inputStream
@@ -20,7 +19,6 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Instant
-import kotlin.time.measureTime
 
 @FunctionalInterface
 interface Deserializer<T : Any> {
@@ -284,12 +282,12 @@ interface LocalOsuParseListener {
     companion object {
       const val TITLE = "Loading Beatmaps"
     }
-    
-    private var first: Boolean = false
+
+    private var firstVisited: Boolean = false
     
     override fun beforeParseBeatmap(index: Int, max: Int) {
-      if (!first) {
-        first = true
+      if (!firstVisited) {
+        firstVisited = true
         ProgressIndicator.Console.progress(index + 1, max, TITLE, null)
       }
     }

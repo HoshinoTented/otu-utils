@@ -6,9 +6,11 @@ import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
+import com.github.hoshinotented.osuutils.serde.BeatmapInCollectionSerializer
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import com.github.hoshinotented.osuutils.util.ModRestriction
 import kala.collection.immutable.ImmutableSeq
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 
@@ -43,7 +45,8 @@ data class BeatmapInfoCache(
  * @param tag the tag of beatmap in pool, such as `NM1`. This is used for generating score list.
  * @param mods allowed mods combination, see [ModRestriction]
  */
-@Serializable
+@Serializable(with = BeatmapInCollectionSerializer::class)
+@KeepGeneratedSerializer
 data class BeatmapInCollection(
   val id: BeatmapId,
   val tag: String?,
