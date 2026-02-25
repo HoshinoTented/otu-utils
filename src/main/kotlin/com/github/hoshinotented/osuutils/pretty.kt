@@ -11,10 +11,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 
-fun prettyBeatmap(set: BeatmapSet, map: Beatmap): String {
-  return prettyBeatmap(set.title, map.version, map.difficulty)
-}
-
 //fun prettyBeatmap(local: LocalBeatmap): String {
 //  return prettyBeatmap(local.titleUnicode ?: local.title, local.difficultyName, local.starRate())
 //}

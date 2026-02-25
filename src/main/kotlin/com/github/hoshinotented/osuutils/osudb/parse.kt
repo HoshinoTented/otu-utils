@@ -135,8 +135,8 @@ object Deserializers {
         return LazySeq(lazy {
           val result = FreezableMutableList.create<Any?>()
           val stream = LittleEndianDataInputStream(ByteArrayInputStream(buffer))
-          
-          for (i in 0..<count) {
+
+          repeat(count) {
             result.append(parse(ty, stream))
           }
           

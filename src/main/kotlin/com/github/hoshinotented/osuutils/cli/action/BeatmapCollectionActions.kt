@@ -282,7 +282,7 @@ class BeatmapCollectionActions(
     }
     
     println("Your scores:")
-    var totalScore: Int = 0
+    var totalScore = 0
     
     highestScores.forEachWith(collection.beatmaps) { score, beatmap ->
       val tag = beatmap.tag
@@ -324,7 +324,7 @@ class BeatmapCollectionActions(
       if (map == null) {
         pi.progress("Beatmap ${it.id} is not found, skip.")
       } else {
-        val set = map.beatmapSet!!
+        val set = map.beatmapSet
         pi.progress(prettyBeatmap(map))
         // TODO: maybe skip when outDir contains such file
         // sayobot doesn't provide valid "location" which whitespace is not url encoded

@@ -1,7 +1,6 @@
 package com.github.hoshinotented.osuutils.cli
 
 import com.github.hoshinotented.osuutils.api.Authentication
-import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.Users
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.Mod

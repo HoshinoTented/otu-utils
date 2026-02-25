@@ -90,11 +90,7 @@ data class BeatmapSet(
   val id: BeatmapSetId, val title: String,
   @SerialName("title_unicode") val titleUnicode: String,
   val beatmaps: ImmutableSeq<Beatmap>? = null,
-) {
-  companion object {
-    val DUMMY = BeatmapSet(0, "", "")
-  }
-}
+)
 
 sealed interface MyBeatmapSet {
   val id: BeatmapSetId
