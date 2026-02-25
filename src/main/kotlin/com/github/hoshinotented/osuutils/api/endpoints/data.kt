@@ -151,6 +151,10 @@ sealed interface MyBeatmap {
 sealed interface MyBeatmapCheckSum : MyBeatmap {
   val checksum: String
 
+  fun upgrade(set: MyBeatmapSet.Impl): MyBeatmapExtended.Impl = MyBeatmapExtended.Impl(
+    id, setId, difficulty, starRate, checksum, set
+  )
+
   @Serializable
   data class Impl(
     override val id: BeatmapId,
