@@ -2,7 +2,7 @@
 
 package com.github.hoshinotented.osuutils.database
 
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import com.github.hoshinotented.osuutils.data.ScoreHistory
@@ -10,7 +10,6 @@ import com.github.hoshinotented.osuutils.io.FileIO
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableMap
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.io.IOException
 import java.nio.file.Path

@@ -1,6 +1,6 @@
 package com.github.hoshinotented.osuutils.osudb
 
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.api.data.Mod
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import com.google.common.io.LittleEndianDataInputStream

@@ -1,8 +1,8 @@
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapSetListed
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
 import com.github.hoshinotented.osuutils.providers.BeatmapCollectionBeatmapProvider

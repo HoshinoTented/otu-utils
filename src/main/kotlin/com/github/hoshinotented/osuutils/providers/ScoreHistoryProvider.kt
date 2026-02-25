@@ -1,7 +1,7 @@
 package com.github.hoshinotented.osuutils.providers
 
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase

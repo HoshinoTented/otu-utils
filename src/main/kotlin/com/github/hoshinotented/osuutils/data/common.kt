@@ -1,6 +1,6 @@
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
 
 interface IBeatmap {
   fun beatmapId(): BeatmapId

@@ -2,12 +2,10 @@
 
 package com.github.hoshinotented.osuutils.database
 
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapSetListed
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.io.FileIO
 import com.github.hoshinotented.osuutils.serde.SeqSerializer

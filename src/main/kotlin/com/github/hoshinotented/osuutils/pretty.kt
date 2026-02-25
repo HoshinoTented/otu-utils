@@ -1,17 +1,13 @@
 package com.github.hoshinotented.osuutils
 
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
-import com.github.hoshinotented.osuutils.data.BeatmapInCollection
+import com.github.hoshinotented.osuutils.api.data.Beatmap
+import com.github.hoshinotented.osuutils.api.data.BeatmapSet
+import com.github.hoshinotented.osuutils.api.data.Mod
 import com.github.hoshinotented.osuutils.data.IBeatmap
-import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 import kotlin.time.Instant
 import kotlin.time.toJavaInstant
 

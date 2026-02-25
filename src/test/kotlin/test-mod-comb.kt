@@ -1,8 +1,8 @@
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.api.data.Mod
 import com.github.hoshinotented.osuutils.prettyMods
 import kala.collection.immutable.ImmutableSeq
 import kotlin.test.asserter
-import com.github.hoshinotented.osuutils.api.endpoints.Mod.*
+import com.github.hoshinotented.osuutils.api.data.Mod.*
 import com.github.hoshinotented.osuutils.util.MCExpr
 import com.github.hoshinotented.osuutils.util.produceModRestriction
 import kotlin.test.Test

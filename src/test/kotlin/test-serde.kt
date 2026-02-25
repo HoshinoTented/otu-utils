@@ -1,7 +1,7 @@
 import com.github.hoshinotented.osuutils.api.OsuApi
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmap
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.MyBeatmap
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import org.intellij.lang.annotations.Language

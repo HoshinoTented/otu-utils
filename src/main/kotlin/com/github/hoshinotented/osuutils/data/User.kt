@@ -2,9 +2,9 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.OsuApi.refreshToken
+import com.github.hoshinotented.osuutils.api.Authentication
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.endpoints.OsuUser
+import com.github.hoshinotented.osuutils.api.data.OsuUser
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -30,7 +30,9 @@ data class Token(
     }
 
   override fun refresh(application: OsuApplication) {
-    application.refreshToken(this)
+    with(Authentication) {
+      application.refreshToken(this@Token)
+    }
   }
 }
 

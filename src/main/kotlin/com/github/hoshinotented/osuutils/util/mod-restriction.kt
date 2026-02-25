@@ -1,6 +1,6 @@
 package com.github.hoshinotented.osuutils.util
 
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.api.data.Mod
 import com.github.hoshinotented.osuutils.parser.ModCombinationLexer
 import com.github.hoshinotented.osuutils.parser.ModCombinationParser
 import kala.collection.immutable.ImmutableSeq

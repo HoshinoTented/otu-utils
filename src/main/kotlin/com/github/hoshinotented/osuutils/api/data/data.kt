@@ -1,6 +1,6 @@
 @file:UseSerializers(SeqSerializer::class)
 
-package com.github.hoshinotented.osuutils.api.endpoints
+package com.github.hoshinotented.osuutils.api.data
 
 import com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores
 import com.github.hoshinotented.osuutils.data.IBeatmap
@@ -28,7 +28,7 @@ data class ScoreUserAttribute(val pin: Pin) {
 
 /**
  * @param id the id of score, this value may invalid, such as local scores
- * @param currentUserAttribute set when requested from [com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores]
+ * @param currentUserAttribute set when requested from [beatmapScores]
  */
 @Serializable
 data class Score(

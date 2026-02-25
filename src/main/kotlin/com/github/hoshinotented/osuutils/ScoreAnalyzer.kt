@@ -1,14 +1,12 @@
 package com.github.hoshinotented.osuutils
 
 import com.github.hoshinotented.osuutils.api.Beatmaps
-import com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
-import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.api.data.Score
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
-import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Duration.Companion.seconds

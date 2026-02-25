@@ -1,4 +1,4 @@
-package com.github.hoshinotented.osuutils.api.endpoints
+package com.github.hoshinotented.osuutils.api.data
 
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet

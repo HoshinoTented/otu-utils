@@ -2,9 +2,9 @@ package com.github.hoshinotented.osuutils.providers
 
 import com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
-import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.api.data.Score
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.osudb.LocalOsu
 import com.github.hoshinotented.osuutils.osudb.LocalScores
@@ -53,7 +53,7 @@ class LocalOsuScoreProvider(val osu: LocalOsu, scores: LocalScores, val v2Only: 
 
 /**
  * Combine results of [ScoreProvider], scores are distinct by creation time.
- * For [LocalOsuScoreProvider], you may use [com.github.hoshinotented.osuutils.api.endpoints.Mod.V2] only to improve
+ * For [LocalOsuScoreProvider], you may use [Mod.V2] only to improve
  * performance.
  */
 class MergeScoreProvider(val lhs: ScoreProvider, val rhs: ScoreProvider) : ScoreProvider {

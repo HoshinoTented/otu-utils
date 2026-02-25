@@ -3,16 +3,14 @@
 
 package com.github.hoshinotented.osuutils.osudb
 
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmap
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapSet
-import com.github.hoshinotented.osuutils.api.endpoints.Score
-import com.github.hoshinotented.osuutils.api.endpoints.UserId
+import com.github.hoshinotented.osuutils.api.data.Beatmap
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapSet
+import com.github.hoshinotented.osuutils.api.data.Score
+import com.github.hoshinotented.osuutils.api.data.UserId
 import com.github.hoshinotented.osuutils.data.IBeatmap
 import kala.collection.SeqView
 import kala.collection.immutable.ImmutableMap

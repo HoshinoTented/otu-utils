@@ -1,20 +1,16 @@
 package com.github.hoshinotented.osuutils.cli.action
 
-import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.api.data.Score
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableList
 import kala.collection.mutable.MutableMap
 import org.jfree.chart.ChartFactory
 import org.jfree.chart.axis.SymbolAxis
-import org.jfree.chart.renderer.xy.XYItemRenderer
-import org.jfree.chart.util.ShapeUtils
 import org.jfree.data.DomainOrder
 import org.jfree.data.general.DatasetChangeListener
 import org.jfree.data.general.DatasetGroup
 import org.jfree.data.xy.XYDataset
 import java.awt.Color
-import java.awt.Font
-import java.awt.Shape
 import java.io.File
 import java.time.Instant
 import java.time.LocalDateTime

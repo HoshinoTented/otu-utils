@@ -3,6 +3,12 @@
 package com.github.hoshinotented.osuutils.api.endpoints
 
 import com.github.hoshinotented.osuutils.api.Endpoint
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.data.Mode
+import com.github.hoshinotented.osuutils.api.data.Score
+import com.github.hoshinotented.osuutils.api.data.Type
+import com.github.hoshinotented.osuutils.api.data.UserId
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.Serializable

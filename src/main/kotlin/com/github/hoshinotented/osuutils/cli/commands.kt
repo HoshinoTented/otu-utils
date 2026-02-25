@@ -1,9 +1,10 @@
 package com.github.hoshinotented.osuutils.cli
 
+import com.github.hoshinotented.osuutils.api.Authentication
 import com.github.hoshinotented.osuutils.api.OsuApi
 import com.github.hoshinotented.osuutils.api.Users
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.Mod
 import com.github.hoshinotented.osuutils.cli.action.AnalyzeAction
 import com.github.hoshinotented.osuutils.cli.action.BeatmapCollectionActions
 import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
@@ -37,7 +38,7 @@ class CommandAuth : Callable<Int> {
       }
     }
 
-    with(OsuApi) {
+    with(Authentication) {
       val user = app.newUser(code)
       userDB.save(user)
 

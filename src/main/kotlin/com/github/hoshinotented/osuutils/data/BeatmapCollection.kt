@@ -2,12 +2,11 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapSet
+import com.github.hoshinotented.osuutils.api.data.Beatmap
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapSet
 import com.github.hoshinotented.osuutils.serde.BeatmapInCollectionSerializer
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import com.github.hoshinotented.osuutils.util.ModRestriction

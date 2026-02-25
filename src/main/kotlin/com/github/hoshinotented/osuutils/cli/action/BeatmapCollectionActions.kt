@@ -2,8 +2,8 @@ package com.github.hoshinotented.osuutils.cli.action
 
 import com.github.hoshinotented.osuutils.api.Beatmaps
 import com.github.hoshinotented.osuutils.api.OsuApi
-import com.github.hoshinotented.osuutils.api.endpoints.Mod
-import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.api.data.Score
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection

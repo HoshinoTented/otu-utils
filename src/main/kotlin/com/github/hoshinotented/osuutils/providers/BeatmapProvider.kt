@@ -3,7 +3,12 @@ package com.github.hoshinotented.osuutils.providers
 import com.github.hoshinotented.osuutils.api.BeatmapSets.beatmapSet
 import com.github.hoshinotented.osuutils.api.Beatmaps.beatmap
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.endpoints.*
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapSet
+import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
 import com.github.hoshinotented.osuutils.data.User
@@ -13,12 +18,12 @@ import kala.collection.immutable.ImmutableSeq
 
 interface BeatmapProvider {
   /**
-   * @return if not null, [Beatmap.beatmapSet] and [Beatmap.checksum] is always set
+   * @return if not null, [com.github.hoshinotented.osuutils.api.data.Beatmap.beatmapSet] and [com.github.hoshinotented.osuutils.api.data.Beatmap.checksum] is always set
    */
   fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended?
 
   /**
-   * @return if not null, [BeatmapSet.beatmaps] is always set
+   * @return if not null, [com.github.hoshinotented.osuutils.api.data.BeatmapSet.beatmaps] is always set
    */
   fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed?
   

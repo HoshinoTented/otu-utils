@@ -2,8 +2,8 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.Score
+import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.data.Score
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.SeqView
 import kala.collection.immutable.ImmutableSeq
