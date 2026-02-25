@@ -36,7 +36,7 @@ data class ScoreHistory(
      * @param scores must be ordered by [Score.CreateTimeComparator]
      */
     fun binaryAnswer(scores: ImmutableSeq<Score>, since: Instant): SeqView<Score> {
-      val dummyScore = Score(0.0F, since, 0, ImmutableSeq.empty(), 0, null, null, null)
+      val dummyScore = Score(0.0F, since, 0, ImmutableSeq.empty(), 0, null)
       val result = scores.binarySearch(dummyScore) { l, r ->
         // [r] is always dummyScore
         val cmp = l.createdAt.compareTo(r.createdAt)

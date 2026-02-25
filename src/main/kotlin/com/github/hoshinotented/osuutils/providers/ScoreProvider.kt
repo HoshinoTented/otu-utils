@@ -43,9 +43,7 @@ class LocalOsuScoreProvider(val osu: LocalOsu, scores: LocalScores, val v2Only: 
     return scores.scores.view()
       .filter { it.playerName == user.player.userName && (!v2Only || Mod.has(it.mods, Mod.V2)) }
       .map {
-        it.toScore(user.player.id) {
-          beatmap.toBeatmap().downgrade()
-        }
+        it.toScore(user.player.id)
       }.sorted(Score.CreateTimeComparator)
       .toSeq()
   }

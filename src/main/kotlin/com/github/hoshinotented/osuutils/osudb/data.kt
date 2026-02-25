@@ -200,23 +200,10 @@ data class LocalScore(
   /**
    * @param beatmapProvider find [Beatmap] by md5 hash
    */
-  fun toScore(userId: UserId, beatmapProvider: (String) -> MyBeatmapCheckSum.Impl?): Score {
-    val beatmap = beatmapProvider(beatmapMd5Hash)
-    if (beatmap != null && beatmap.checksum != beatmapMd5Hash) {
-      throw IllegalArgumentException(
-        """
-        Beatmap checksum mismatch.
-        Expected: $beatmapMd5Hash
-        Actual: ${beatmap.checksum}
-      """.trimIndent()
-      )
-    }
-
+  fun toScore(userId: UserId): Score {
     return Score(
       accuracy, createTime,
       scoreId, Mod.asSeq(mods), userId,
-      beatmap,
-      null,
       null
     )
   }

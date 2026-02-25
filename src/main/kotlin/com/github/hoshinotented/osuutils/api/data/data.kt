@@ -38,9 +38,9 @@ data class Score(
   val mods: ImmutableSeq<Mod>,
   @SerialName("user_id") val userId: UserId,
   // not null in recent scores or best score of beatmap, null in all score of beatmap
-  val beatmap: MyBeatmapCheckSum.Impl?,
+//  val beatmap: MyBeatmapCheckSum.Impl?,
   // not null in recent scores
-  @SerialName("beatmapset") val beatmapSet: MyBeatmapSet.Impl?,
+//  @SerialName("beatmapset") val beatmapSet: MyBeatmapSet.Impl?,
   @SerialName("current_user_attributes") val currentUserAttribute: ScoreUserAttribute?,
 ) {
   object AccComparator : Comparator<Score> {

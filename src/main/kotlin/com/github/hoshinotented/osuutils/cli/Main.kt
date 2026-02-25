@@ -18,6 +18,7 @@ import java.nio.file.Path
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.io.path.*
+import kotlin.system.exitProcess
 
 class Main : MainArgs() {
   internal val io by lazy { if (dryRun) DryFileIO else DefaultFileIO }
@@ -128,7 +129,9 @@ class Main : MainArgs() {
 
 fun main(args: Array<String>) {
   val app = Main()
-  CommandLine(app)
+  val code = CommandLine(app)
     .setExecutionStrategy(app::executionStrategy)
     .execute(*args)
+
+  exitProcess(code)
 }
