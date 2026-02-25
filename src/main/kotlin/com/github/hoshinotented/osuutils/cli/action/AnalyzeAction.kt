@@ -70,10 +70,9 @@ class AnalyzeAction(
       val comment = track.comment
       
       val map = beatmapProvider.beatmap(report.history.beatmapId)!!
-      val mapSet = beatmapProvider.beatmapSet(map.beatmapSetId)!!
       
       reportBuffer.appendLine(
-        "Report of beatmap: [${prettyBeatmap(mapSet, map)}](${
+        "Report of beatmap: [${prettyBeatmap(map)}](${
           Beatmaps.makeBeatmapUrl(
             map.id
           )
@@ -100,9 +99,8 @@ class AnalyzeAction(
       recentPlayedUnplayed.forEach {
         val id = it.beatmapId
         val map = beatmapProvider.beatmap(id)!!
-        val mapSet = beatmapProvider.beatmapSet(map.beatmapSetId)!!
-        
-        reportBuffer.appendLine("[${prettyBeatmap(mapSet, map)}](${Beatmaps.makeBeatmapUrl(map.id)})")
+
+        reportBuffer.appendLine("[${prettyBeatmap(map)}](${Beatmaps.makeBeatmapUrl(map.id)})")
       }
     }
     
@@ -112,12 +110,11 @@ class AnalyzeAction(
   fun removeLastAnalyze(analyzeId: Int?) {
     val histories = historyProvider.histories()
     val analyzeId = analyzeId ?: analyzeDatabase.load().lastId
-    // we don't remove the analyze record in analyzeDatabase
+    // we don't remove the analyzing record in analyzeDatabase
     
     histories.forEach {
       val beatmap = beatmapProvider.beatmap(it.beatmapId)!!
-      val set = beatmapProvider.beatmapSet(beatmap.beatmapSetId)!!
-      println("Removing the last group of ${prettyBeatmap(set, beatmap)}")
+      println("Removing the last group of ${prettyBeatmap(beatmap)}")
       val ids = it.analyzeIds
       
       if (ids == null) {

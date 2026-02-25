@@ -3,19 +3,10 @@ package com.github.hoshinotented.osuutils.api
 import com.github.hoshinotented.osuutils.api.OsuApi.deJson
 import com.github.hoshinotented.osuutils.api.OsuApi.sendAuthedRequest
 import com.github.hoshinotented.osuutils.api.Users.me
-import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
-import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.endpoints.*
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSets
 import com.github.hoshinotented.osuutils.api.endpoints.Beatmaps
-import com.github.hoshinotented.osuutils.api.endpoints.Mode
-import com.github.hoshinotented.osuutils.api.endpoints.OAuth2Endpoints
-import com.github.hoshinotented.osuutils.api.endpoints.OsuUser
-import com.github.hoshinotented.osuutils.api.endpoints.Type
 import com.github.hoshinotented.osuutils.api.endpoints.Users
-import com.github.hoshinotented.osuutils.api.endpoints.Score
-import com.github.hoshinotented.osuutils.api.endpoints.ScoreId
 import com.github.hoshinotented.osuutils.data.ClientToken
 import com.github.hoshinotented.osuutils.data.IToken
 import com.github.hoshinotented.osuutils.data.Token
@@ -234,24 +225,24 @@ object Beatmaps {
     // response score are unsorted
     return scores.scores.sorted(Score.CreateTimeComparator)
   }
-  
-  fun OsuApplication.beatmap(user: User, beatmapId: BeatmapId): Beatmap? {
+
+  fun OsuApplication.beatmap(user: User, beatmapId: BeatmapId): MyBeatmapExtended? {
     val req = Beatmaps.Beatmap(beatmapId)
     val resp = sendAuthedRequest(user.token, req.toRequest())
       .checkNotFound()
       ?.successOrThrow() ?: return null
-    
-    return deJson.decodeFromString(resp)
+
+    return deJson.decodeFromString<MyBeatmapExtended.Impl>(resp)
   }
 }
 
 object BeatmapSets {
-  fun OsuApplication.beatmapSet(user: User, beatmapSetId: BeatmapSetId): BeatmapSet? {
+  fun OsuApplication.beatmapSet(user: User, beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
     val req = BeatmapSets.BeatmapSet(beatmapSetId)
     val resp = sendAuthedRequest(user.token, req.toRequest())
       .checkNotFound()
       ?.successOrThrow() ?: return null
-    
-    return deJson.decodeFromString(resp)
+
+    return deJson.decodeFromString<MyBeatmapSetListed.Impl>(resp)
   }
 }

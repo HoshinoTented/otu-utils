@@ -113,15 +113,15 @@ class BeatmapCollectionActions(
         beatmap
       } else {
         val cache = beatmapProvider.beatmap(beatmap.id)?.let { beatmap ->
-          val set = beatmap.beatmapSet!!
+          val set = beatmap.beatmapSet
           BeatmapInfoCache(
             beatmap.id,
-            beatmap.beatmapSetId,
+            beatmap.setId,
             set.title,
             set.titleUnicode,
-            beatmap.version,
             beatmap.difficulty,
-            beatmap.checksum!!
+            beatmap.starRate,
+            beatmap.checksum
           )
         }
         
@@ -325,7 +325,7 @@ class BeatmapCollectionActions(
         pi.progress("Beatmap ${it.id} is not found, skip.")
       } else {
         val set = map.beatmapSet!!
-        pi.progress(prettyBeatmap(set, map))
+        pi.progress(prettyBeatmap(map))
         // TODO: maybe skip when outDir contains such file
         // sayobot doesn't provide valid "location" which whitespace is not url encoded
         val resp = OsuApi.client.send(

@@ -9,8 +9,6 @@ import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.osudb.LocalOsu
 import com.github.hoshinotented.osuutils.osudb.LocalScores
 import kala.collection.immutable.ImmutableSeq
-import kala.collection.mutable.FreezableMutableList
-import kala.collection.mutable.MutableList
 
 interface ScoreProvider {
   /**
@@ -46,7 +44,7 @@ class LocalOsuScoreProvider(val osu: LocalOsu, scores: LocalScores, val v2Only: 
       .filter { it.playerName == user.player.userName && (!v2Only || Mod.has(it.mods, Mod.V2)) }
       .map {
         it.toScore(user.player.id) {
-          beatmap.toBeatmap()
+          beatmap.toBeatmap().downgrade()
         }
       }.sorted(Score.CreateTimeComparator)
       .toSeq()

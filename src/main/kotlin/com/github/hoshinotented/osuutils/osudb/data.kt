@@ -7,6 +7,10 @@ import com.github.hoshinotented.osuutils.api.endpoints.Beatmap
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapId
 import com.github.hoshinotented.osuutils.api.endpoints.BeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Mod
+import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmap
+import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.endpoints.MyBeatmapSet
 import com.github.hoshinotented.osuutils.api.endpoints.Score
 import com.github.hoshinotented.osuutils.api.endpoints.UserId
 import com.github.hoshinotented.osuutils.data.IBeatmap
@@ -116,14 +120,14 @@ data class LocalBeatmap(
       .map { it.difficulty }
       .getOrDefault(0.0F)
   }
-  
-  fun toBeatmap(mods: ImmutableSeq<Mod> = ImmutableSeq.empty()): Beatmap {
-    val star = starRate(mods)
-    
-    return Beatmap(
-      beatmapSetId.toLong(), beatmapId.toLong(), star, difficultyName,
-      BeatmapSet(beatmapSetId.toLong(), title, titleUnicode ?: title, null),
-      null
+
+  fun toBeatmap(): MyBeatmapExtended {
+    val star = starRate(ImmutableSeq.empty())
+
+    return MyBeatmapExtended.Impl(
+      beatmapSetId.toLong(), beatmapId.toLong(), difficultyName, star,
+      md5Hash,
+      MyBeatmapSet.Impl(beatmapSetId.toLong(), title, titleUnicode ?: title)
     )
   }
   
@@ -155,7 +159,6 @@ data class LocalOsu(
     }
   }
 
-  val beatmapByHash: ImmutableMap<String, LocalBeatmap> by lazy { beatmaps.associateBy { it.md5Hash } }
   val beatmapById: ImmutableMap<BeatmapId, LocalBeatmap> by lazy { beatmaps.associateBy { it.beatmapId.toLong() } }
 }
 
@@ -199,9 +202,9 @@ data class LocalScore(
   /**
    * @param beatmapProvider find [Beatmap] by md5 hash
    */
-  fun toScore(userId: UserId, beatmapProvider: (String) -> Beatmap?): Score {
+  fun toScore(userId: UserId, beatmapProvider: (String) -> MyBeatmapCheckSum.Impl?): Score {
     val beatmap = beatmapProvider(beatmapMd5Hash)
-    if (beatmap != null && beatmap.checksum != null && beatmap.checksum != beatmapMd5Hash) {
+    if (beatmap != null && beatmap.checksum != beatmapMd5Hash) {
       throw IllegalArgumentException(
         """
         Beatmap checksum mismatch.
