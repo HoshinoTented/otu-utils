@@ -12,6 +12,7 @@ import com.github.hoshinotented.osuutils.providers.LocalOsuScoreProvider
 import com.github.hoshinotented.osuutils.providers.MergeScoreProvider
 import com.github.hoshinotented.osuutils.providers.OnlineScoreProvider
 import com.google.common.io.LittleEndianDataInputStream
+import kala.collection.immutable.ImmutableSeq
 import picocli.CommandLine
 import java.io.IOException
 import java.nio.file.Path
@@ -90,12 +91,12 @@ class Main : MainArgs() {
   }
   
   fun initLogger() {
+    val loggers = ImmutableSeq.of(OsuApi.logger, cliLogger)
+
     if (!verbose) {
-      OsuApi.logger.level = Level.OFF
-      cliLogger.level = Level.OFF
+      loggers.forEach { it.level = Level.OFF }
     } else {
-      OsuApi.logger.level = Level.ALL
-      cliLogger.level = Level.ALL
+      loggers.forEach { it.level = Level.ALL }
     }
   }
   

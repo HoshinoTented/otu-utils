@@ -5,6 +5,7 @@ import com.github.hoshinotented.osuutils.osudb.LocalScores
 import com.github.hoshinotented.osuutils.osudb.parse
 import com.github.hoshinotented.osuutils.osudb.parseLocalOsu
 import com.google.common.io.LittleEndianDataInputStream
+import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.inputStream
 import kotlin.reflect.full.createType
@@ -13,7 +14,11 @@ import kotlin.time.measureTimedValue
 
 class ReadOsuTest {
   // path to osu! directory, must contains `scores.db`, `osu!.db` and `collection.db`
-  val osuPath = Path(System.getenv("OSU_HOME"))
+  val dotEnv = Properties().apply {
+    Path(".env").inputStream().use { load(it) }
+  }
+
+  val osuPath = Path(dotEnv.getProperty("OSU_PATH")!!)
   
   @Test
   fun testOsu() {

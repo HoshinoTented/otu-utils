@@ -49,9 +49,6 @@ sealed interface IToken {
   fun refresh(application: OsuApplication)
 }
 
-/**
- * User 指代的是用户
- */
 @Serializable
 @ExperimentalTime
 data class User(val token: Token, val player: OsuUser)

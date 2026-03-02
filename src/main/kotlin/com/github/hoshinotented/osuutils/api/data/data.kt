@@ -7,6 +7,7 @@ import com.github.hoshinotented.osuutils.data.IBeatmap
 import com.github.hoshinotented.osuutils.prettyBeatmap
 import com.github.hoshinotented.osuutils.prettyMods
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
+import kala.collection.Seq
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -126,6 +127,10 @@ sealed interface Beatmap {
 
   // serial name on interface property doesn't work,
   // but we still place them here
+
+  /**
+   * The id of beatmap, note that the id may not unique, i.e. a local beatmap that has not been submitted.
+   */
   val id: BeatmapId
   @SerialName("beatmapset_id")
   val setId: BeatmapSetId
@@ -140,7 +145,13 @@ sealed interface Beatmap {
     @SerialName("beatmapset_id") override val setId: BeatmapSetId,
     @SerialName("version") override val difficulty: String,
     @SerialName("difficulty_rating") override val starRate: Float,
-  ) : Beatmap
+  ) : MyBeatmap
+}
+
+    fun prettyDifficulty(difficulty: Float): String {
+      return String.format("%.2f*", difficulty)
+    }
+  }
 }
 
 sealed interface BeatmapCheckSum : Beatmap {

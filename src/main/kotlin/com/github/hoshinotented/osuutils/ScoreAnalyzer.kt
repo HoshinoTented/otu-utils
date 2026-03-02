@@ -47,6 +47,7 @@ class ScoreAnalyzer(
     val recentBest: Score?,
     val recentBestCompare: Float,
     val historyBestCompare: Float,
+    val averageAccuracy: Float,
   ) {
     companion object {
       private fun StringBuilder.simplePrettyScore(score: Score, diff: Float? = null) {
@@ -146,6 +147,7 @@ class ScoreAnalyzer(
     val sortedScores = scoreSince.sorted(Score.AccComparator)
     val worstScore = sortedScores.first
     val bestScore = sortedScores.last
+    val avgAcc = sortedScores.view().map { it.accuracy }.average()
     
     val recentBest = history.recentBest(now.minus(history.recentWindow))
     
@@ -160,7 +162,7 @@ class ScoreAnalyzer(
     
     return AnalyzeReport(
       history.addScores(scoreSince, newBest, analyzeId), playCount, Report(
-        bestScore, worstScore, recentBest, recentBestCompare, historyBestCompare
+        bestScore, worstScore, recentBest, recentBestCompare, historyBestCompare, avgAcc.toFloat()
       )
     )
   }

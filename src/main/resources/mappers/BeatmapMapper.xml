@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.hoshinotented.osuutils.database.BeatmapMapper">
+    <update id="createBeatmapTable">
+        create table if not exists beatmaps (
+        id integer primary key not null,
+        setId integer not null,
+        difficulty string not null,
+        starRate float not null,
+        checksum text not null
+        )
+    </update>
+
+    <select id="loadBeatmap" resultType="Beatmap" parameterType="long">
+        select
+        id,
+        setId,
+        difficulty,
+        starRate,
+        checksum
+        from beatmaps
+        where id = #{id}
+    </select>
+
+    <insert id="saveBeatmap" parameterType="Beatmap">
+        insert or replace into beatmaps
+        (id, setId, difficulty, starRate, checksum)
+        values(#{id}, #{setId}, #{difficulty}, #{starRate}, #{checksum})
+    </insert>
+
+    <select id="loadBeatmapSet" resultType="BeatmapSet" parameterType="long">
+        select
+        id,
+        title,
+        titleUnicode
+        from beatmapsets
+        where id = #{id}
+    </select>
+
+    <resultMap id="beatmapSetResult" type="BeatmapSet">
+        <collection property="beatmaps" ofType="Beatmap" column="id" select="loadBeatmap"/>
+    </resultMap>
+</mapper>

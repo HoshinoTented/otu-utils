@@ -28,13 +28,14 @@ dependencies {
   implementation(libs.kotlinx.serialization.json)
   
   implementation(libs.kala.collection)
-  implementation(libs.kala.gson)
-  implementation(libs.gson)
-  implementation(libs.jline)
+//  implementation(libs.kala.gson)
+//  implementation(libs.gson)
+//  implementation(libs.jline)
   implementation(libs.picocli)
   implementation(libs.jfreechart)
   implementation(libs.guava)
   implementation(libs.sqlite)
+  implementation(libs.mybatis)
   antlr("org.antlr:antlr4:4.5")
   
   kapt(libs.picocli.codegen)
