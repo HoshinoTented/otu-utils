@@ -85,14 +85,7 @@ data class Score(
   val isLocal: Boolean get() = id > 0
 }
 
-@Serializable
-data class BeatmapSet(
-  val id: BeatmapSetId, val title: String,
-  @SerialName("title_unicode") val titleUnicode: String,
-  val beatmaps: ImmutableSeq<Beatmap>? = null,
-)
-
-sealed interface MyBeatmapSet {
+sealed interface BeatmapSet {
   val id: BeatmapSetId
   val title: String
   @SerialName("title_unicode")
@@ -103,13 +96,13 @@ sealed interface MyBeatmapSet {
     override val id: BeatmapSetId,
     override val title: String,
     @SerialName("title_unicode") override val titleUnicode: String
-  ) : MyBeatmapSet
+  ) : BeatmapSet
 }
 
-sealed interface MyBeatmapSetListed : MyBeatmapSet {
-  val beatmaps: ImmutableSeq<out MyBeatmapCheckSum>
+sealed interface BeatmapSetListed : BeatmapSet {
+  val beatmaps: ImmutableSeq<out BeatmapCheckSum>
 
-  fun downgrade(): MyBeatmapSet.Impl = MyBeatmapSet.Impl(
+  fun downgrade(): BeatmapSet.Impl = BeatmapSet.Impl(
     id, title, titleUnicode
   )
 
@@ -118,13 +111,19 @@ sealed interface MyBeatmapSetListed : MyBeatmapSet {
     override val id: BeatmapSetId,
     override val title: String,
     @SerialName("title_unicode") override val titleUnicode: String,
-    override val beatmaps: ImmutableSeq<MyBeatmapCheckSum.Impl>
-  ) : MyBeatmapSetListed
+    override val beatmaps: ImmutableSeq<BeatmapCheckSum.Impl>
+  ) : BeatmapSetListed
 }
 
 // TODO: some api returns Beatmap with "beatmapset", this can save time
 
-sealed interface MyBeatmap {
+sealed interface Beatmap {
+  companion object {
+    fun prettyDifficulty(difficulty: Float): String {
+      return String.format("%.2f*", difficulty)
+    }
+  }
+
   // serial name on interface property doesn't work,
   // but we still place them here
   val id: BeatmapId
@@ -141,13 +140,13 @@ sealed interface MyBeatmap {
     @SerialName("beatmapset_id") override val setId: BeatmapSetId,
     @SerialName("version") override val difficulty: String,
     @SerialName("difficulty_rating") override val starRate: Float,
-  ) : MyBeatmap
+  ) : Beatmap
 }
 
-sealed interface MyBeatmapCheckSum : MyBeatmap {
+sealed interface BeatmapCheckSum : Beatmap {
   val checksum: String
 
-  fun upgrade(set: MyBeatmapSet.Impl): MyBeatmapExtended.Impl = MyBeatmapExtended.Impl(
+  fun upgrade(set: BeatmapSet.Impl): BeatmapExtended.Impl = BeatmapExtended.Impl(
     id, setId, difficulty, starRate, checksum, set
   )
 
@@ -158,12 +157,23 @@ sealed interface MyBeatmapCheckSum : MyBeatmap {
     @SerialName("version") override val difficulty: String,
     @SerialName("difficulty_rating") override val starRate: Float,
     override val checksum: String,
-  ) : MyBeatmapCheckSum
+  ) : BeatmapCheckSum {
+    companion object {
+      fun from(map: BeatmapCheckSum): Impl {
+        if (map is Impl) return map
+        return Impl(
+          map.id, map.setId,
+          map.difficulty,
+          map.starRate, map.checksum
+        )
+      }
+    }
+  }
 }
 
-sealed interface MyBeatmapExtended : MyBeatmapCheckSum, IBeatmap {
+sealed interface BeatmapExtended : BeatmapCheckSum, IBeatmap {
   @SerialName("beatmapset")
-  val beatmapSet: MyBeatmapSet
+  val beatmapSet: BeatmapSet
 
   override fun starRate(): Float = starRate
   override fun beatmapId(): BeatmapId = id
@@ -171,9 +181,7 @@ sealed interface MyBeatmapExtended : MyBeatmapCheckSum, IBeatmap {
   override fun difficultyName(): String = difficulty
   override fun md5Hash(): String = checksum
 
-  fun downgrade(): MyBeatmapCheckSum.Impl = MyBeatmapCheckSum.Impl(
-    id, setId, difficulty, starRate, checksum
-  )
+  fun downgrade(): BeatmapCheckSum.Impl = BeatmapCheckSum.Impl.from(this)
 
   @Serializable
   data class Impl(
@@ -182,45 +190,6 @@ sealed interface MyBeatmapExtended : MyBeatmapCheckSum, IBeatmap {
     @SerialName("version") override val difficulty: String,
     @SerialName("difficulty_rating") override val starRate: Float,
     override val checksum: String,
-    @SerialName("beatmapset") override val beatmapSet: MyBeatmapSet.Impl,
-  ) : MyBeatmapExtended
-}
-
-/**
- * For [IBeatmap], the caller must ensure that [beatmapSet] and [checksum] is set...
- */
-@Serializable
-data class Beatmap(
-  @SerialName("beatmapset_id") val beatmapSetId: Long,
-  val id: Long,
-  @SerialName("difficulty_rating") val difficulty: Float,
-  val version: String,
-  @SerialName("beatmapset") val beatmapSet: BeatmapSet?,
-  val checksum: String?,
-) : IBeatmap {
-  override fun beatmapId(): BeatmapId {
-    return id
-  }
-
-  override fun title(): String {
-    return beatmapSet!!.titleUnicode
-  }
-
-  override fun difficultyName(): String {
-    return version
-  }
-
-  override fun starRate(): Float {
-    return difficulty
-  }
-
-  override fun md5Hash(): String {
-    return checksum!!
-  }
-
-  companion object {
-    fun prettyDifficulty(difficulty: Float): String {
-      return String.format("%.2f*", difficulty)
-    }
-  }
+    @SerialName("beatmapset") override val beatmapSet: BeatmapSet.Impl,
+  ) : BeatmapExtended
 }

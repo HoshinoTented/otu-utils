@@ -67,8 +67,7 @@ class Main : MainArgs() {
     try {
       return block()
     } catch (e: Exception) {
-      System.err.println(e.message)
-      cliLogger.throwing("Main", "catching", e)
+      e.printStackTrace()
       return 1
     }
   }

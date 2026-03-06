@@ -2,11 +2,10 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.data.Beatmap
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSet
+import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.BeatmapSet
 import com.github.hoshinotented.osuutils.serde.BeatmapInCollectionSerializer
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import com.github.hoshinotented.osuutils.util.ModRestriction
@@ -36,15 +35,15 @@ data class BeatmapInfoCache(
   override fun starRate(): Float = starRate
   override fun md5Hash(): String = md5Hash
 
-  fun toBeatmap(): MyBeatmapExtended.Impl = MyBeatmapExtended.Impl(
-    setId, id, difficultyName, starRate, md5Hash, MyBeatmapSet.Impl(setId, title, title())
+  fun toBeatmap(): BeatmapExtended.Impl = BeatmapExtended.Impl(
+    setId, id, difficultyName, starRate, md5Hash, BeatmapSet.Impl(setId, title, title())
   )
 
   companion object {
     /**
      * @param map [Beatmap.checksum] and [Beatmap.beatmapSet] cannot be null
      */
-    fun from(map: MyBeatmapExtended): BeatmapInfoCache {
+    fun from(map: BeatmapExtended): BeatmapInfoCache {
       val set = map.beatmapSet
       return BeatmapInfoCache(
         map.id, map.setId, set.title, set.titleUnicode, map.difficulty, map.starRate, map.checksum

@@ -3,12 +3,10 @@
 
 package com.github.hoshinotented.osuutils.osudb
 
-import com.github.hoshinotented.osuutils.api.data.Beatmap
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.Mod
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSet
+import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.BeatmapSet
 import com.github.hoshinotented.osuutils.api.data.Score
 import com.github.hoshinotented.osuutils.api.data.UserId
 import com.github.hoshinotented.osuutils.data.IBeatmap
@@ -119,13 +117,13 @@ data class LocalBeatmap(
       .getOrDefault(0.0F)
   }
 
-  fun toBeatmap(): MyBeatmapExtended {
+  fun toBeatmap(): BeatmapExtended {
     val star = starRate(ImmutableSeq.empty())
 
-    return MyBeatmapExtended.Impl(
+    return BeatmapExtended.Impl(
       beatmapSetId.toLong(), beatmapId.toLong(), difficultyName, star,
       md5Hash,
-      MyBeatmapSet.Impl(beatmapSetId.toLong(), title, titleUnicode ?: title)
+      BeatmapSet.Impl(beatmapSetId.toLong(), title, titleUnicode ?: title)
     )
   }
   

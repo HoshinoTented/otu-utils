@@ -1,7 +1,7 @@
 import com.github.hoshinotented.osuutils.api.OsuApi
-import com.github.hoshinotented.osuutils.api.data.MyBeatmap
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.Beatmap
+import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import org.intellij.lang.annotations.Language
@@ -46,8 +46,8 @@ class SerdeTest {
       }
     """.trimIndent()
 
-    OsuApi.deJson.decodeFromString<MyBeatmap.Impl>(json)
-    OsuApi.deJson.decodeFromString<MyBeatmapCheckSum.Impl>(json)
-    OsuApi.deJson.decodeFromString<MyBeatmapExtended.Impl>(json)
+    OsuApi.deJson.decodeFromString<Beatmap.Impl>(json)
+    OsuApi.deJson.decodeFromString<BeatmapCheckSum.Impl>(json)
+    OsuApi.deJson.decodeFromString<BeatmapExtended.Impl>(json)
   }
 }

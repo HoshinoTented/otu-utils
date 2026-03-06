@@ -1,8 +1,8 @@
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
+import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
 import com.github.hoshinotented.osuutils.providers.BeatmapCollectionBeatmapProvider
@@ -16,18 +16,18 @@ import kotlin.test.assertSame
 
 class BeatmapProviderTests {
   class TestBeatmapProvider(
-    val beatmapSets: ImmutableSeq<MyBeatmapSetListed.Impl>
+    val beatmapSets: ImmutableSeq<BeatmapSetListed.Impl>
   ) : BeatmapProvider {
-    private val byBeatmapId: ImmutableMap<BeatmapId, MyBeatmapCheckSum.Impl?> = beatmapSets.view()
+    private val byBeatmapId: ImmutableMap<BeatmapId, BeatmapCheckSum.Impl?> = beatmapSets.view()
       .flatMap { it.beatmaps }
       .associateBy { it.id }
 
-    private val bySetId: ImmutableMap<BeatmapSetId, MyBeatmapSetListed.Impl> = beatmapSets.view()
+    private val bySetId: ImmutableMap<BeatmapSetId, BeatmapSetListed.Impl> = beatmapSets.view()
       .associateBy { it.id }
 
-    override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+    override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
       val map = byBeatmapId[beatmapId] ?: return null
-      return MyBeatmapExtended.Impl(
+      return BeatmapExtended.Impl(
         map.id,
         map.setId,
         map.difficulty,
@@ -37,18 +37,18 @@ class BeatmapProviderTests {
       )
     }
 
-    override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+    override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
       return beatmapSets.find { it.id == beatmapSetId }.orNull
     }
   }
 
   companion object {
-    fun beatmapSetOf(id: BeatmapId): MyBeatmapSetListed.Impl = MyBeatmapSetListed.Impl(
+    fun beatmapSetOf(id: BeatmapId): BeatmapSetListed.Impl = BeatmapSetListed.Impl(
       id, "Beatmap $id", "Beatmap $id in unicode",
-      ImmutableSeq.of(MyBeatmapCheckSum.Impl(id, id, "$id's Insane", 16.11F, "$id"))
+      ImmutableSeq.of(BeatmapCheckSum.Impl(id, id, "$id's Insane", 16.11F, "$id"))
     )
 
-    val BEATMAP_SETS: ImmutableSeq<MyBeatmapSetListed.Impl> = ImmutableSeq.of(
+    val BEATMAP_SETS: ImmutableSeq<BeatmapSetListed.Impl> = ImmutableSeq.of(
       beatmapSetOf(114514),
       beatmapSetOf(1919810),
       beatmapSetOf(1611),

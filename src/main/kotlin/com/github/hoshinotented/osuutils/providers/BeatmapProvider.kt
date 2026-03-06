@@ -5,10 +5,10 @@ import com.github.hoshinotented.osuutils.api.Beatmaps.beatmap
 import com.github.hoshinotented.osuutils.api.OsuApplication
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSet
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
+import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.BeatmapSet
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
 import com.github.hoshinotented.osuutils.data.User
@@ -20,22 +20,22 @@ interface BeatmapProvider {
   /**
    * @return if not null, [com.github.hoshinotented.osuutils.api.data.Beatmap.beatmapSet] and [com.github.hoshinotented.osuutils.api.data.Beatmap.checksum] is always set
    */
-  fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended?
+  fun beatmap(beatmapId: BeatmapId): BeatmapExtended?
 
   /**
    * @return if not null, [com.github.hoshinotented.osuutils.api.data.BeatmapSet.beatmaps] is always set
    */
-  fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed?
+  fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed?
   
   fun or(other: BeatmapProvider): BeatmapProvider = ChainedBeatmapProvider(this, other)
 }
 
 class OnlineBeatmapProvider(val application: OsuApplication, val user: User) : BeatmapProvider {
-  override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+  override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
     return application.beatmap(user, beatmapId)
   }
 
-  override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     return application.beatmapSet(user, beatmapSetId)
   }
 }
@@ -44,7 +44,7 @@ class OnlineBeatmapProvider(val application: OsuApplication, val user: User) : B
  * @param delegate must NOT be [LocalBeatmapProvider]
  */
 class CacheBeatmapProvider(val delegate: BeatmapProvider, val db: BeatmapDatabase) : BeatmapProvider {
-  override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+  override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
     val result = delegate.beatmap(beatmapId)
     if (result != null) {
       val set = delegate.beatmapSet(result.setId)
@@ -56,7 +56,7 @@ class CacheBeatmapProvider(val delegate: BeatmapProvider, val db: BeatmapDatabas
     return result
   }
 
-  override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     return delegate.beatmapSet(beatmapSetId)?.also {
       db.saveSet(it)
     }
@@ -64,23 +64,23 @@ class CacheBeatmapProvider(val delegate: BeatmapProvider, val db: BeatmapDatabas
 }
 
 class LocalBeatmapProvider(val db: BeatmapDatabase) : BeatmapProvider {
-  override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+  override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
     val local = db.loadMaybe(beatmapId) ?: return null
     val set = db.loadSet(local.setId)
 
-    return MyBeatmapExtended.Impl(
+    return BeatmapExtended.Impl(
       local.id,
       local.setId,
       local.difficulty,
       local.starRate,
       local.checksum,
-      MyBeatmapSet.Impl(
+      BeatmapSet.Impl(
         set.id, set.title, set.titleUnicode
       )
     )
   }
 
-  override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     return db.loadSetMaybe(beatmapSetId)
   }
 }
@@ -89,19 +89,19 @@ class LocalOsuBeatmapProvider(osu: LocalOsu) : BeatmapProvider {
   private val byBeatmapId = osu.beatmaps.associateBy { it.beatmapId }
   private val byBeatmapSetId = osu.beatmaps.groupBy { it.beatmapSetId }
 
-  override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+  override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
     return byBeatmapId.getOrNull(beatmapId.toInt())?.toBeatmap()
   }
 
-  override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     return byBeatmapSetId[beatmapSetId.toInt()]?.let {
       val any = it.first()    // never empty
-      MyBeatmapSetListed.Impl(
+      BeatmapSetListed.Impl(
         any.beatmapSetId.toLong(),
         any.title,
         any.titleUnicode ?: any.title,
         ImmutableSeq.from(it.map { map ->
-          MyBeatmapCheckSum.Impl(
+          BeatmapCheckSum.Impl(
             map.beatmapId.toLong(),
             map.beatmapSetId.toLong(),
             map.difficultyName,
@@ -138,19 +138,19 @@ class BeatmapCollectionBeatmapProvider(
     if (it.cache == cache) it else it.copy(cache = cache)
   }
 
-  override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+  override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
     // i don't think this takes time...
     val map = collection.find { it.id == beatmapId }.orNull ?: return null
     if (map.cache == null) return null
     return map.cache.toBeatmap()
   }
 
-  override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     val maps = collection.filter { it.cache != null && it.cache.setId == beatmapSetId }
     if (maps.isEmpty) return null
     val first = maps.first
     val cache = first.cache!!   // never null
-    return MyBeatmapSetListed.Impl(
+    return BeatmapSetListed.Impl(
       cache.setId, cache.title,
       cache.titleUnicode ?: cache.title,
       maps.map {
@@ -166,11 +166,11 @@ fun BeatmapProviderImpl(application: OsuApplication, user: User, database: Beatm
 }
 
 class ChainedBeatmapProvider(val left: BeatmapProvider, val right: BeatmapProvider) : BeatmapProvider {
-  override fun beatmap(beatmapId: BeatmapId): MyBeatmapExtended? {
+  override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
     return left.beatmap(beatmapId) ?: right.beatmap(beatmapId)
   }
 
-  override fun beatmapSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     return left.beatmapSet(beatmapSetId) ?: right.beatmapSet(beatmapSetId)
   }
 }

@@ -4,8 +4,8 @@ package com.github.hoshinotented.osuutils.database
 
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapCheckSum
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
+import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.io.FileIO
 import com.github.hoshinotented.osuutils.serde.SeqSerializer
@@ -65,7 +65,7 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     }
   }
 
-  fun loadMaybe(beatmapId: BeatmapId): MyBeatmapCheckSum.Impl? {
+  fun loadMaybe(beatmapId: BeatmapId): BeatmapCheckSum.Impl? {
     val setId = metadata().let {
       if (it.map.containsKey(beatmapId)) {
         it.map.getValue(beatmapId)
@@ -79,37 +79,37 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     } else null
   }
 
-  fun load(beatmapId: BeatmapId): MyBeatmapCheckSum.Impl {
+  fun load(beatmapId: BeatmapId): BeatmapCheckSum.Impl {
     return loadMaybe(beatmapId)
       ?: throw IllegalStateException("Unable to load beatmap $beatmapId from database, the database may be corrupted.")
   }
 
-  fun save(map: MyBeatmapCheckSum) {
+  fun save(map: BeatmapCheckSum) {
     val setPath = databaseDir.resolve("${map.setId}")
     if (!setPath.exists()) {
       if (!setPath.toFile().mkdirs()) throw IOException("Unable to create directories: $setPath")
     }
     
     setPath.resolve("${map.id}.json")
-      .writeText(commonSerde.encodeToString(map))
+      .writeText(commonSerde.encodeToString(BeatmapCheckSum.Impl.from(map)))
   }
 
-  fun loadSetMaybe(beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  fun loadSetMaybe(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     val path = databaseDir.resolve("$beatmapSetId.json")
     if (!path.exists()) return null
     
     val thin = commonSerde.decodeFromString<ThinBeatmapSet>(path.readText())
     val beatmaps = thin.beatmaps.map { load(it) }
 
-    return MyBeatmapSetListed.Impl(thin.id, thin.title, thin.titleUnicode, beatmaps)
+    return BeatmapSetListed.Impl(thin.id, thin.title, thin.titleUnicode, beatmaps)
   }
 
-  fun loadSet(beatmapSetId: BeatmapSetId): MyBeatmapSetListed {
+  fun loadSet(beatmapSetId: BeatmapSetId): BeatmapSetListed {
     return loadSetMaybe(beatmapSetId)
       ?: throw IllegalStateException("Unable to load beatmap set $beatmapSetId from database, the database may be corrupted.")
   }
 
-  fun saveSet(set: MyBeatmapSetListed) {
+  fun saveSet(set: BeatmapSetListed) {
     val beatmaps = set.beatmaps
     val thin = ThinBeatmapSet(set.id, set.title, set.titleUnicode, set.beatmaps.map { it.id })
     

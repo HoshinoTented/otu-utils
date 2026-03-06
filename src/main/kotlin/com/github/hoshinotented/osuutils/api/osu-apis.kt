@@ -8,8 +8,8 @@ import com.github.hoshinotented.osuutils.api.Users.me
 import com.github.hoshinotented.osuutils.api.data.BeatmapId
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
 import com.github.hoshinotented.osuutils.api.data.Mode
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapExtended
-import com.github.hoshinotented.osuutils.api.data.MyBeatmapSetListed
+import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
+import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed
 import com.github.hoshinotented.osuutils.api.data.OsuUser
 import com.github.hoshinotented.osuutils.api.data.Score
 import com.github.hoshinotented.osuutils.api.data.ScoreId
@@ -228,23 +228,23 @@ object Beatmaps {
     return scores.scores.sorted(Score.CreateTimeComparator)
   }
 
-  fun OsuApplication.beatmap(user: User, beatmapId: BeatmapId): MyBeatmapExtended? {
+  fun OsuApplication.beatmap(user: User, beatmapId: BeatmapId): BeatmapExtended? {
     val req = Beatmaps.Beatmap(beatmapId)
     val resp = sendAuthedRequest(user.token, req.toRequest())
       .checkNotFound()
       ?.successOrThrow() ?: return null
 
-    return deJson.decodeFromString<MyBeatmapExtended.Impl>(resp)
+    return deJson.decodeFromString<BeatmapExtended.Impl>(resp)
   }
 }
 
 object BeatmapSets {
-  fun OsuApplication.beatmapSet(user: User, beatmapSetId: BeatmapSetId): MyBeatmapSetListed? {
+  fun OsuApplication.beatmapSet(user: User, beatmapSetId: BeatmapSetId): BeatmapSetListed? {
     val req = BeatmapSets.BeatmapSet(beatmapSetId)
     val resp = sendAuthedRequest(user.token, req.toRequest())
       .checkNotFound()
       ?.successOrThrow() ?: return null
 
-    return deJson.decodeFromString<MyBeatmapSetListed.Impl>(resp)
+    return deJson.decodeFromString<BeatmapSetListed.Impl>(resp)
   }
 }
