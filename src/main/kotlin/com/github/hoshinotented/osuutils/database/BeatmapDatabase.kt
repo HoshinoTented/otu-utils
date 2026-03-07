@@ -21,11 +21,10 @@ import kotlin.io.path.name
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-// TODO: when do we use a real database?
 /**
  * @param databaseDir must exist
  */
-class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
+class BeatmapDatabase(val databaseDir: Path, val io: FileIO) : IBeatmapDatabase {
   val metadataPath: Path = databaseDir.resolve("metadata.json")
   
   @Serializable
@@ -65,26 +64,24 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     }
   }
 
-  fun loadMaybe(beatmapId: BeatmapId): BeatmapCheckSum.Impl? {
+  override fun initialize() {
+  }
+
+  override fun loadMaybe(id: BeatmapId): BeatmapCheckSum.Impl? {
     val setId = metadata().let {
-      if (it.map.containsKey(beatmapId)) {
-        it.map.getValue(beatmapId)
+      if (it.map.containsKey(id)) {
+        it.map.getValue(id)
       } else return null
     }
-    
-    val path = databaseDir.resolve("$setId").resolve("$beatmapId.json")
+
+    val path = databaseDir.resolve("$setId").resolve("$id.json")
     return if (path.exists()) {
       // TODO: maybe cache?
       commonSerde.decodeFromString(path.readText())
     } else null
   }
 
-  fun load(beatmapId: BeatmapId): BeatmapCheckSum.Impl {
-    return loadMaybe(beatmapId)
-      ?: throw IllegalStateException("Unable to load beatmap $beatmapId from database, the database may be corrupted.")
-  }
-
-  fun save(map: BeatmapCheckSum) {
+  override fun save(map: BeatmapCheckSum) {
     val setPath = databaseDir.resolve("${map.setId}")
     if (!setPath.exists()) {
       if (!setPath.toFile().mkdirs()) throw IOException("Unable to create directories: $setPath")
@@ -94,8 +91,8 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
       .writeText(commonSerde.encodeToString(BeatmapCheckSum.Impl.from(map)))
   }
 
-  fun loadSetMaybe(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
-    val path = databaseDir.resolve("$beatmapSetId.json")
+  override fun loadSetMaybe(id: BeatmapSetId): BeatmapSetListed? {
+    val path = databaseDir.resolve("$id.json")
     if (!path.exists()) return null
     
     val thin = commonSerde.decodeFromString<ThinBeatmapSet>(path.readText())
@@ -104,12 +101,7 @@ class BeatmapDatabase(val databaseDir: Path, val io: FileIO) {
     return BeatmapSetListed.Impl(thin.id, thin.title, thin.titleUnicode, beatmaps)
   }
 
-  fun loadSet(beatmapSetId: BeatmapSetId): BeatmapSetListed {
-    return loadSetMaybe(beatmapSetId)
-      ?: throw IllegalStateException("Unable to load beatmap set $beatmapSetId from database, the database may be corrupted.")
-  }
-
-  fun saveSet(set: BeatmapSetListed) {
+  override fun saveSet(set: BeatmapSetListed) {
     val beatmaps = set.beatmaps
     val thin = ThinBeatmapSet(set.id, set.title, set.titleUnicode, set.beatmaps.map { it.id })
     

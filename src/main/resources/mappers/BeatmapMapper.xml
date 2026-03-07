@@ -13,6 +13,14 @@
         )
     </update>
 
+    <update id="createBeatmapSetTable">
+        create table if not exists beatmapsets (
+        id integer primary key not null,
+        title string not null,
+        titleUnicode string
+        )
+    </update>
+
     <select id="loadBeatmap" resultType="Beatmap" parameterType="long">
         select
         id,
@@ -24,13 +32,17 @@
         where id = #{id}
     </select>
 
+    <select id="loadBeatmapForSet" resultType="Beatmap" parameterType="long">
+        select * from beatmaps where setId = #{id}
+    </select>
+
     <insert id="saveBeatmap" parameterType="Beatmap">
         insert or replace into beatmaps
         (id, setId, difficulty, starRate, checksum)
         values(#{id}, #{setId}, #{difficulty}, #{starRate}, #{checksum})
     </insert>
 
-    <select id="loadBeatmapSet" resultType="BeatmapSet" parameterType="long">
+    <select id="loadBeatmapSet" resultMap="beatmapSetResult" parameterType="long">
         select
         id,
         title,
@@ -40,6 +52,14 @@
     </select>
 
     <resultMap id="beatmapSetResult" type="BeatmapSet">
-        <collection property="beatmaps" ofType="Beatmap" column="id" select="loadBeatmap"/>
+        <!-- this is necessary otherwise you get id=0 -->
+        <id property="id" column="id"/>
+        <collection property="beatmaps" ofType="Beatmap" column="id" select="loadBeatmapForSet"/>
     </resultMap>
+
+    <insert id="saveBeatmapSet" parameterType="BeatmapSet">
+        insert or replace into beatmapsets
+        (id, title, titleUnicode)
+        values(#{id}, #{title}, #{titleUnicode})
+    </insert>
 </mapper>

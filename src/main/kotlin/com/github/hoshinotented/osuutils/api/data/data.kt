@@ -145,13 +145,7 @@ sealed interface Beatmap {
     @SerialName("beatmapset_id") override val setId: BeatmapSetId,
     @SerialName("version") override val difficulty: String,
     @SerialName("difficulty_rating") override val starRate: Float,
-  ) : MyBeatmap
-}
-
-    fun prettyDifficulty(difficulty: Float): String {
-      return String.format("%.2f*", difficulty)
-    }
-  }
+  ) : Beatmap
 }
 
 sealed interface BeatmapCheckSum : Beatmap {

@@ -6,6 +6,9 @@
     <typeAliases>
         <typeAlias alias="Beatmap" type="com.github.hoshinotented.osuutils.database.BeatmapInDb"/>
         <typeAlias alias="BeatmapSet" type="com.github.hoshinotented.osuutils.database.BeatmapSetInDb"/>
+        <typeAlias alias="Score" type="com.github.hoshinotented.osuutils.database.ScoreInDb"/>
+        <typeAlias alias="History" type="com.github.hoshinotented.osuutils.database.ScoreHistoryInDb"/>
+        <typeAlias alias="Analyze" type="com.github.hoshinotented.osuutils.database.AnalyzeRecordInDb"/>
     </typeAliases>
     <environments default="development">
         <environment id="development">

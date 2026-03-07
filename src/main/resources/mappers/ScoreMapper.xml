@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.hoshinotented.osuutils.database.ScoreMapper">
+    <update id="createScoreTable">
+        create table if not exists scores (
+        createAt text primary key not null,
+        scoreId integer not null,
+        beatmapId integer not null,
+        accuracy float not null,
+        mods integer not null,
+        userId integer not null,
+        websiteScoreId integer not null
+        )
+    </update>
+
+    <update id="createScoreHistoryTable">
+        create table if not exists score_histories (
+        id integer primary key,
+        beatmapId integer not null,
+        activeAnalyzeId integer not null,
+        )
+    </update>
+
+    <update id="createAnalyzeTable">
+        create table if not exists analyze (
+        id integer primary key,
+        historyId integer not null,
+        prevAnalyzeId integer not null,
+        analyzeTime text not null,
+        bestScoreId integer not null,
+        valid boolean not null
+        )
+    </update>
+
+    <select id="loadScores" resultType="Score" parameterType="long">
+        select * from scores where beatmapId = #{id}
+        order by createAt desc
+    </select>
+
+    <!-- we don't support modifying scores -->
+    <insert id="saveScore" parameterType="Score">
+        insert into scores
+        (createAt, scoreId, accuracy, mods, userId, websiteScoreId)
+        values(#{createAt}, #{scoreId}, #{accuracy}, #{mods}, #{userId}, #{websiteScoreId})
+    </insert>
+
+    <select id="loadHistory" resultType="History" parameterType="long">
+        select * from score_histories where beatmapId = #{id}
+    </select>
+
+    <insert id="saveHistory" parameterType="History">
+        insert or replace into score_histories
+        (id, beatmapId, activeAnalyzeId)
+        values(#{id}, #{beatmapId}, #{activeAnalyzeId})
+    </insert>
+
+    <select id="loadAnalyze" resultType="Analyze" parameterType="int">
+        select * from analyze where id = #{id}
+    </select>
+
+    <insert id="saveAnalyze" parameterType="Analyze">
+        insert or replace into analyze
+        (id, historyId, prevAnalyzeId, analyzeTime, bestScoreId, valid)
+        values(#{id}, #{historyId}, #{prevAnalyzeId}, #{analyzeTime}, #{bestScoreId}, #{valid})
+    </insert>
+</mapper>
