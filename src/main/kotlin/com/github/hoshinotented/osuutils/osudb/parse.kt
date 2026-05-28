@@ -244,6 +244,7 @@ fun <T : Any> parse(type: KClass<T>, bytes: LittleEndianDataInputStream): T? {
   return parse(type.createType(), bytes) as T?
 }
 
+// TODO: allow corrupted data, add a flag maybe
 fun parse(type: KType, bytes: LittleEndianDataInputStream): Any? {
   // pre parse
   val clazz = type.classifier ?: throw IllegalArgumentException("null")
@@ -253,7 +254,7 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream): Any? {
   if (found != null) {
     val decoded = found.decode(type.arguments, bytes)
     if (!type.isMarkedNullable && decoded == null) {
-      throw IllegalArgumentException("$type is not null while a null value is parsed.")
+      throw OsuParseException("$type is not null while a null value is parsed.")
     }
     
     return decoded
@@ -267,6 +268,20 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream): Any? {
   }
   
   return primeCon.call(*args)
+}
+
+fun parseBeatmaps(bytes: LittleEndianDataInputStream): ImmutableSeq<LocalBeatmap> {
+  val beatmaps = bytes.readMany { _, _ ->
+    try {
+      parse(LocalBeatmap::class, bytes)
+    } catch (_: OsuParseException) {
+      // TODO: use log
+      System.err.println("LocalBeatmap failed to parse, skipped")
+      null
+    }
+  }
+
+  return beatmaps.filterNotNull().map { it!! }
 }
 
 interface LocalOsuParseListener {
@@ -305,12 +320,18 @@ fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseLis
   val unlockedTime = bytes.readDateTime()
   val playerName = bytes.readString()!!
   val beatmaps = bytes.readMany { idx, max ->
-    listener.beforeParseBeatmap(idx, max)
-    val beatmap = parse(LocalBeatmap::class, this)!!
-    listener.afterParseBeatmap(idx, max, beatmap)
-    beatmap
-  }
-  
+    try {
+      listener.beforeParseBeatmap(idx, max)
+      val beatmap = parse(LocalBeatmap::class, this)!!
+      // TODO: maybe move to finally block
+      listener.afterParseBeatmap(idx, max, beatmap)
+      beatmap
+    } catch (e: OsuParseException) {
+      System.err.println("LocalBeatmap failed to parse: ${e.message}")
+      null
+    }
+  }.filterNotNull().map { it !! }
+
   val permission = bytes.readInt()
   
   return LocalOsu(version, folderCount, unlocked, unlockedTime, playerName, beatmaps, permission)

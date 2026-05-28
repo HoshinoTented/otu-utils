@@ -50,8 +50,8 @@ data class LocalBeatmap(
   val titleUnicode: String?,
   val creator: String,
   val difficultyName: String,
-  val audioFileName: String,
-  val md5Hash: String,
+  val audioFileName: String?,
+  val md5Hash: String?,
   val osuFileName: String,      // .osu file
   val rankedStatus: Byte,
   val circleAmount: Short,
@@ -122,7 +122,7 @@ data class LocalBeatmap(
 
     return BeatmapExtended.Impl(
       beatmapSetId.toLong(), beatmapId.toLong(), difficultyName, star,
-      md5Hash,
+      md5Hash(),
       BeatmapSet.Impl(beatmapSetId.toLong(), title, titleUnicode ?: title)
     )
   }
@@ -135,7 +135,7 @@ data class LocalBeatmap(
   
   override fun starRate(): Float = starRate(ImmutableSeq.empty())
   
-  override fun md5Hash(): String = md5Hash
+  override fun md5Hash(): String = md5Hash ?: ""
 }
 
 data class LocalOsu(

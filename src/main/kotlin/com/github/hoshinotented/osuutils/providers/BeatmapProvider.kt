@@ -106,7 +106,7 @@ class LocalOsuBeatmapProvider(osu: LocalOsu) : BeatmapProvider {
             map.beatmapSetId.toLong(),
             map.difficultyName,
             map.starRate(),
-            map.md5Hash
+            map.md5Hash()
           )
         })
       )

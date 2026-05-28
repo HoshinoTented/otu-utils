@@ -1,3 +1,4 @@
+import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
 import com.github.hoshinotented.osuutils.osudb.LocalCollections
 import com.github.hoshinotented.osuutils.osudb.LocalOsu
 import com.github.hoshinotented.osuutils.osudb.LocalOsuParseListener
@@ -25,6 +26,20 @@ class ReadOsuTest {
     println("Cost ${value.duration}")
     val osu = value.value
     return
+  }
+
+  @Test
+  fun find529() {
+    val `in` = LittleEndianDataInputStream(osuPath.resolve("osu!.db").inputStream())
+    val value = parseLocalOsu(`in`, LocalOsuParseListener.Console())
+
+    val maps = value.beatmaps.filter { it.beatmapId.toString().contains("529") }
+    maps.forEach {
+      if (it.totalTimeMilliseconds <= 241000 && it.starRate() >= 4.5) {
+        val isRanked = LocalBeatmap.Companion.RankedStatus.values()[it.rankedStatus.toInt()]
+        println("${it.beatmapId}    ${it.title}    Length: ${it.totalTimeMilliseconds / 1000}s    SR: ${it.starRate()}    Ranked: ${isRanked}")
+      }
+    }
   }
   
   @Test
