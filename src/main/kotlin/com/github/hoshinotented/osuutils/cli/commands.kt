@@ -1,15 +1,16 @@
 package com.github.hoshinotented.osuutils.cli
 
-import com.github.hoshinotented.osuutils.api.Authentication
-import com.github.hoshinotented.osuutils.api.Users
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.api.category.Authentication
+import com.github.hoshinotented.osuutils.api.category.Users
+import com.github.hoshinotented.osuutils.api.prettyBeatmap
+import com.github.hoshinotented.osuutils.data.BeatmapId
+import com.github.hoshinotented.osuutils.data.Mod
 import com.github.hoshinotented.osuutils.cli.action.AnalyzeAction
 import com.github.hoshinotented.osuutils.cli.action.BeatmapCollectionActions
 import com.github.hoshinotented.osuutils.cli.action.RenderScoresAction
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
-import com.github.hoshinotented.osuutils.prettyBeatmap
+import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.util.ProgressIndicator
 import kala.collection.immutable.ImmutableSeq
 import picocli.CommandLine
@@ -38,7 +39,8 @@ class CommandAuth : Callable<Int> {
     }
 
     with(Authentication) {
-      val user = app.newUser(code)
+      val (token, osuUser) = app.newUser(code)
+      val user = User(token, osuUser)
       userDB.save(user)
 
       println("Hello, ${user.player.userName}!")
@@ -57,10 +59,11 @@ class CommandMe : Callable<Int> {
     val app = app()
     var user = user()
 
-    user = with(Users) {
-      app.me(user.token)
+    val osuUser = with(Users) {
+      app.withToken(user.token).me()
     }
 
+    user = User(user.token, osuUser)
     userDB.save(user)
 
     println("Hello, ${user.player.userName}!")
@@ -96,7 +99,7 @@ class CommandAnalyze : Callable<Int> {
     val app = app()
     val action =
       AnalyzeAction(
-        app,
+        app.withToken(user.token),
         user,
         analyzeMetadataDB,
         scoreHistoryDB,
@@ -159,7 +162,7 @@ class CommandRollback : Callable<Int> {
     val user = user()
     val app = app()
     val action = AnalyzeAction(
-      app, user, analyzeMetadataDB, scoreHistoryDB, beatmapProvider, scoreProvider,
+      app.withToken(user.token), user, analyzeMetadataDB, scoreHistoryDB, beatmapProvider, scoreProvider,
       ProgressIndicator.Console
     )
     action.removeLastAnalyze(null)

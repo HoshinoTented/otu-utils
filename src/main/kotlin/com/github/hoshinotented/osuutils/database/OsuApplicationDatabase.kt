@@ -3,9 +3,7 @@ package com.github.hoshinotented.osuutils.database
 import com.github.hoshinotented.osuutils.api.OsuApplication
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.io.FileIO
-import java.io.IOException
 import java.nio.file.Path
-import kotlin.io.path.exists
 
 class OsuApplicationDatabase(baseDir: Path, val io: FileIO) {
   val applicationConfigFile: Path = baseDir.resolve("app.json")

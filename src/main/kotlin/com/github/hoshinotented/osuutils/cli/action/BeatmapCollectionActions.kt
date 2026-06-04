@@ -1,23 +1,26 @@
 package com.github.hoshinotented.osuutils.cli.action
 
-import com.github.hoshinotented.osuutils.api.Beatmaps
+import com.github.hoshinotented.osuutils.api.category.Beatmaps
 import com.github.hoshinotented.osuutils.api.OsuApi
-import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.data.Mod
 import com.github.hoshinotented.osuutils.api.data.Score
+import com.github.hoshinotented.osuutils.api.prettyBeatmap
+import com.github.hoshinotented.osuutils.api.prettyMods
 import com.github.hoshinotented.osuutils.commonSerde
 import com.github.hoshinotented.osuutils.data.BeatmapCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
 import com.github.hoshinotented.osuutils.data.IBeatmap
-import com.github.hoshinotented.osuutils.osudb.*
-import com.github.hoshinotented.osuutils.prettyBeatmap
-import com.github.hoshinotented.osuutils.prettyMods
+import com.github.hoshinotented.osuutils.dump.*
+import com.github.hoshinotented.osuutils.dump.deser.readString
+import com.github.hoshinotented.osuutils.dump.deser.skipString
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
 import com.github.hoshinotented.osuutils.util.AccumulateProgressIndicator
-import com.github.hoshinotented.osuutils.util.MCExpr
-import com.github.hoshinotented.osuutils.util.MCExpr.Companion.test
-import com.github.hoshinotented.osuutils.util.ModRestriction
+import com.github.hoshinotented.osuutils.modexpr.MCExpr
+import com.github.hoshinotented.osuutils.modexpr.MCExpr.Companion.test
+import com.github.hoshinotented.osuutils.modexpr.ModRestriction
 import com.github.hoshinotented.osuutils.util.ProgressIndicator
+import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
 import java.io.IOException
 import java.net.URI
@@ -30,7 +33,9 @@ import java.util.Locale
 import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.inputStream
 import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.writeText
 import kotlin.jvm.optionals.getOrNull
 
@@ -357,4 +362,26 @@ class BeatmapCollectionActions(
       }
     }
   }
+}
+
+fun findReplay(localOsuPath: Path, beatmapMd5: String, expectedReplayMd5: String): Path? {
+  val replayDir = localOsuPath
+    .resolve("Data")
+    .resolve("r")
+
+  // so what does the fucking stupid number mean?
+  val candidates = replayDir.listDirectoryEntries("$beatmapMd5-*.osr")
+  candidates.forEach {
+    // we only read replay md5 hash
+    val replayMd5Hash = LittleEndianDataInputStream(it.inputStream()).use { bytes ->
+      bytes.skipBytes(1 + 4)    // Byte + Int
+      bytes.skipString()
+      bytes.skipString()
+      bytes.readString() ?: throw OsuParseException("null")
+    }
+
+    if (replayMd5Hash == expectedReplayMd5) return it
+  }
+
+  return null
 }

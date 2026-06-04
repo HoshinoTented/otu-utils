@@ -2,7 +2,7 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.serde.SeqSerializer
+import com.github.hoshinotented.osuutils.api.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers

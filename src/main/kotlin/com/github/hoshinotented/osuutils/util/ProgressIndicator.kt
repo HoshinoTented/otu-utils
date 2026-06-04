@@ -1,5 +1,7 @@
 package com.github.hoshinotented.osuutils.util
 
+// TODO: serr while progress bar is printed is kinda buggy, we need a dedicate ConsoleHelper that knows if we are in a progress bar
+
 /**
  * `{title} [ current / max ] |ratio visualize| {subtitle}`
  */

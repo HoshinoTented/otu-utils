@@ -42,3 +42,8 @@ Commands:
 ```
 
 本地 osu! 的数据不会立刻更新（比如分数），你可能需要关闭正在运行的 osu! 来更新本地数据。
+
+## Project Structure
+
+* `data`: 包含 `api` 与 `dump` 都需要的数据类
+* `dump`: 从本地 osu 数据库文件读取数据

@@ -6,11 +6,15 @@ import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.*
 import com.github.hoshinotented.osuutils.io.DefaultFileIO
 import com.github.hoshinotented.osuutils.io.DryFileIO
-import com.github.hoshinotented.osuutils.osudb.*
+import com.github.hoshinotented.osuutils.dump.*
+import com.github.hoshinotented.osuutils.dump.deser.LocalOsuParseListener
+import com.github.hoshinotented.osuutils.dump.deser.parse
+import com.github.hoshinotented.osuutils.dump.deser.parseLocalOsu
 import com.github.hoshinotented.osuutils.providers.BeatmapProviderImpl
 import com.github.hoshinotented.osuutils.providers.LocalOsuScoreProvider
 import com.github.hoshinotented.osuutils.providers.MergeScoreProvider
 import com.github.hoshinotented.osuutils.providers.OnlineScoreProvider
+import com.github.hoshinotented.osuutils.util.ConsoleOsuParseListener
 import com.google.common.io.LittleEndianDataInputStream
 import picocli.CommandLine
 import java.io.IOException
@@ -29,13 +33,13 @@ class Main : MainArgs() {
   internal val analyzeMetadataDB by lazy { AnalyzeDatabase(profile.toPath(), io) }
   internal val localOsu by lazy {
     useLocalOsu("osu!.db") {
-      parseLocalOsu(it, LocalOsuParseListener.Console())
+      parseLocalOsu(it, ConsoleOsuParseListener())
     }
   }
   
   internal val localScores by lazy {
     useLocalOsu("scores.db") {
-      parse(LocalScores::class, it)
+      parse(LocalScores::class, it, null)
         ?: throw OsuParseException("Unable to find any scores in scores.db, this could be either this application is out-of-date or the database is corrupted.")
     }
   }
@@ -58,7 +62,8 @@ class Main : MainArgs() {
   
   internal val beatmapProvider by lazy {
     // never local
-    BeatmapProviderImpl(app(), user(), mapDB)
+    // TODO: use client token maybe
+    BeatmapProviderImpl(app().withToken(user().token), mapDB)
   }
   
   val cliLogger = Logger.getLogger("CLI")

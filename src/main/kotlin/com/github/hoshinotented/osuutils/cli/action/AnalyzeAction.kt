@@ -1,15 +1,15 @@
 package com.github.hoshinotented.osuutils.cli.action
 
 import com.github.hoshinotented.osuutils.ScoreAnalyzer
-import com.github.hoshinotented.osuutils.api.Beatmaps
-import com.github.hoshinotented.osuutils.api.OsuApplication
+import com.github.hoshinotented.osuutils.api.ApplicationRole
+import com.github.hoshinotented.osuutils.api.category.Beatmaps
+import com.github.hoshinotented.osuutils.api.prettyBeatmap
+import com.github.hoshinotented.osuutils.api.prettyTime
 import com.github.hoshinotented.osuutils.data.AnalyzeRecord
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.AnalyzeDatabase
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
-import com.github.hoshinotented.osuutils.prettyBeatmap
-import com.github.hoshinotented.osuutils.prettyTime
 import com.github.hoshinotented.osuutils.providers.BeatmapProvider
 import com.github.hoshinotented.osuutils.providers.ScoreHistoryProvider
 import com.github.hoshinotented.osuutils.providers.ScoreProvider
@@ -20,7 +20,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 class AnalyzeAction(
-  application: OsuApplication,
+  role: ApplicationRole,
   val user: User,
   val analyzeDatabase: AnalyzeDatabase,
   historyDatabase: ScoreHistoryDatabase,
@@ -31,7 +31,7 @@ class AnalyzeAction(
 ) {
   data class Options(val showRecentUnplayed: Boolean)
   
-  val historyProvider = ScoreHistoryProvider(application, user, historyDatabase)
+  val historyProvider = ScoreHistoryProvider(role, user, historyDatabase)
   
   fun analyze(): String {
     val reportBuffer = StringBuilder()

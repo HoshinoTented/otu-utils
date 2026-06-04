@@ -2,13 +2,11 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.SeqSerializer
 import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
 import com.github.hoshinotented.osuutils.api.data.BeatmapSet
+import com.github.hoshinotented.osuutils.modexpr.ModRestriction
 import com.github.hoshinotented.osuutils.serde.BeatmapInCollectionSerializer
-import com.github.hoshinotented.osuutils.serde.SeqSerializer
-import com.github.hoshinotented.osuutils.util.ModRestriction
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
@@ -40,9 +38,6 @@ data class BeatmapInfoCache(
   )
 
   companion object {
-    /**
-     * @param map [Beatmap.checksum] and [Beatmap.beatmapSet] cannot be null
-     */
     fun from(map: BeatmapExtended): BeatmapInfoCache {
       val set = map.beatmapSet
       return BeatmapInfoCache(

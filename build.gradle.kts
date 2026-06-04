@@ -4,13 +4,9 @@ plugins {
   kotlin("plugin.serialization") version "2.3.21"
   kotlin("kapt") version "2.3.21"
   application
-  antlr
 }
 
 val projectVersion: String = libs.versions.project.get()
-
-group = "com.github.hoshinotented"
-version = projectVersion
 
 application.mainClass.set("com.github.hoshinotented.osuutils.cli.MainKt")
 
@@ -18,16 +14,41 @@ tasks.named<JavaExec>("run") {
   standardInput = System.`in`
 }
 
-repositories {
-  mavenCentral()
+allprojects {
+  val libs = rootProject.libs
+
+  apply {
+    plugin("kotlin")
+  }
+
+  group = "com.github.hoshinotented"
+  version = projectVersion
+
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    implementation(kotlin("stdlib"))
+    implementation(libs.kala.collection)
+
+    testImplementation(kotlin("test"))
+  }
+
+  tasks.test {
+    useJUnitPlatform()
+    enableAssertions = true
+  }
 }
 
 dependencies {
-  implementation(kotlin("stdlib"))
+  implementation(project(":data"))
+  implementation(project(":api"))
+  implementation(project(":dump"))
+  implementation(project(":modexpr"))
   implementation(kotlin("reflect"))
   implementation(libs.kotlinx.serialization.json)
-  
-  implementation(libs.kala.collection)
+
   implementation(libs.kala.gson)
   implementation(libs.gson)
   implementation(libs.jline)
@@ -35,11 +56,10 @@ dependencies {
   implementation(libs.jfreechart)
   implementation(libs.guava)
   implementation(libs.sqlite)
-  antlr("org.antlr:antlr4:4.5")
   
   kapt(libs.picocli.codegen)
   
-  testImplementation(kotlin("test"))
+//  testImplementation(kotlin("test"))
 }
 
 
@@ -48,11 +68,6 @@ kapt {
     // required by picocli-codegen
     arg("project", "${project.group}/${project.name}")
   }
-}
-
-tasks.test {
-  useJUnitPlatform()
-  enableAssertions = true
 }
 
 kotlin {

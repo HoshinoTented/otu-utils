@@ -1,14 +1,12 @@
-import com.github.hoshinotented.osuutils.osudb.LocalBeatmap
-import com.github.hoshinotented.osuutils.osudb.LocalCollections
-import com.github.hoshinotented.osuutils.osudb.LocalOsu
-import com.github.hoshinotented.osuutils.osudb.LocalOsuParseListener
-import com.github.hoshinotented.osuutils.osudb.LocalScores
-import com.github.hoshinotented.osuutils.osudb.parse
-import com.github.hoshinotented.osuutils.osudb.parseLocalOsu
+import com.github.hoshinotented.osuutils.dump.LocalBeatmap
+import com.github.hoshinotented.osuutils.dump.LocalCollections
+import com.github.hoshinotented.osuutils.dump.LocalOsuParseListener
+import com.github.hoshinotented.osuutils.dump.LocalScores
+import com.github.hoshinotented.osuutils.dump.parse
+import com.github.hoshinotented.osuutils.dump.parseLocalOsu
 import com.google.common.io.LittleEndianDataInputStream
 import kotlin.io.path.Path
 import kotlin.io.path.inputStream
-import kotlin.reflect.full.createType
 import kotlin.test.Test
 import kotlin.time.measureTimedValue
 

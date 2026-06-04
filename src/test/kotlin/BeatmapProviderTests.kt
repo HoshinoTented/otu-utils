@@ -1,5 +1,5 @@
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.data.BeatmapId
+import com.github.hoshinotented.osuutils.data.BeatmapSetId
 import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
 import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed

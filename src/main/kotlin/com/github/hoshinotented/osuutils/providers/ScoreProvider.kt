@@ -1,18 +1,20 @@
 package com.github.hoshinotented.osuutils.providers
 
-import com.github.hoshinotented.osuutils.api.Beatmaps.beatmapScores
+import com.github.hoshinotented.osuutils.api.ApplicationRole
+import com.github.hoshinotented.osuutils.api.category.Beatmaps.beatmapScores
 import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.Mod
 import com.github.hoshinotented.osuutils.api.data.Score
+import com.github.hoshinotented.osuutils.data.BeatmapId
+import com.github.hoshinotented.osuutils.data.Mod
 import com.github.hoshinotented.osuutils.data.User
-import com.github.hoshinotented.osuutils.osudb.LocalOsu
-import com.github.hoshinotented.osuutils.osudb.LocalScores
+import com.github.hoshinotented.osuutils.dump.LocalOsu
+import com.github.hoshinotented.osuutils.dump.LocalScores
+import com.github.hoshinotented.osuutils.dump.toScore
 import kala.collection.immutable.ImmutableSeq
 
 interface ScoreProvider {
   /**
-   * @return scores, always ordered by [Score.CreateTimeComparator]
+   * @return scores, always ordered by [com.github.hoshinotented.osuutils.api.data.Score.CreateTimeComparator]
    */
   fun beatmapScores(user: User, beatmapId: BeatmapId): ImmutableSeq<Score>?
 }
@@ -22,11 +24,11 @@ class OnlineScoreProvider(val application: OsuApplication) : ScoreProvider {
     user: User,
     beatmapId: BeatmapId,
   ): ImmutableSeq<Score>? {
-    return application.beatmapScores(user, beatmapId)
+    val role = application.withToken(user.token)
+    return role.beatmapScores(user.player, beatmapId)
   }
 }
 
-// TODO: we need something that combines online score and local (v2) score
 class LocalOsuScoreProvider(val osu: LocalOsu, scores: LocalScores, val v2Only: Boolean) : ScoreProvider {
   private val byHash = scores.scoredBeatmaps.associateBy { it.md5Hash }
 

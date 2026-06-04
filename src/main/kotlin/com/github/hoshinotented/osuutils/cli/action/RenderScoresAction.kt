@@ -47,7 +47,7 @@ class RenderScoresAction(val outFile: File, val title: String, val userName: Str
       if (what >= 0) return what.toDouble()
       
       val insertPoint = -what - 1
-      // this means [item] is belongs to [insertPoint - 1]-th set
+      // this means [item] belongs to [insertPoint - 1]-th set
       return (insertPoint - 1).toDouble()
     }
     
@@ -100,7 +100,6 @@ class RenderScoresAction(val outFile: File, val title: String, val userName: Str
     }
     
     // https://stackoverflow.com/questions/6665354/changing-the-shapes-of-points-in-scatter-plot
-    // change shape of plot (according to )
     
     // https://stackoverflow.com/questions/9767201/jfreechart-with-string-and-double
     chart.xyPlot.domainAxis = SymbolAxis("date", dates.toArray(String::class.java)).apply {

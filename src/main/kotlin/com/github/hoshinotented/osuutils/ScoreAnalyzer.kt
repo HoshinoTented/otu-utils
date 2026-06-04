@@ -1,12 +1,14 @@
 package com.github.hoshinotented.osuutils
 
-import com.github.hoshinotented.osuutils.api.Beatmaps
-import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.Mod
+import com.github.hoshinotented.osuutils.api.ApplicationRole
+import com.github.hoshinotented.osuutils.api.category.Beatmaps
+import com.github.hoshinotented.osuutils.api.data.OsuUser
 import com.github.hoshinotented.osuutils.api.data.Score
+import com.github.hoshinotented.osuutils.api.prettyMods
+import com.github.hoshinotented.osuutils.api.prettyTime
+import com.github.hoshinotented.osuutils.data.BeatmapId
+import com.github.hoshinotented.osuutils.data.Mod
 import com.github.hoshinotented.osuutils.data.ScoreHistory
-import com.github.hoshinotented.osuutils.data.User
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Duration.Companion.seconds
@@ -170,7 +172,7 @@ class ScoreAnalyzer(
   }
 }
 
-fun OsuApplication.initializeScoreHistory(user: User, beatmapId: BeatmapId): ScoreHistory {
+fun ApplicationRole.initializeScoreHistory(user: OsuUser, beatmapId: BeatmapId): ScoreHistory {
   return with(Beatmaps) {
     val score = bestScore(user, beatmapId)
     

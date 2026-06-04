@@ -1,19 +1,19 @@
 package com.github.hoshinotented.osuutils.providers
 
-import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.ApplicationRole
+import com.github.hoshinotented.osuutils.data.BeatmapId
 import com.github.hoshinotented.osuutils.data.ScoreHistory
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.database.ScoreHistoryDatabase
 import com.github.hoshinotented.osuutils.initializeScoreHistory
 import kala.collection.immutable.ImmutableSeq
 
-class ScoreHistoryProvider(val application: OsuApplication, val user: User, val historyDB: ScoreHistoryDatabase) {
+class ScoreHistoryProvider(val role: ApplicationRole, val user: User, val historyDB: ScoreHistoryDatabase) {
   fun history(beatmapId: BeatmapId): ScoreHistory {
     val history = historyDB.load(beatmapId)
     // in case no record
     if (history.best == null) {
-      val history = application.initializeScoreHistory(user, beatmapId)
+      val history = role.initializeScoreHistory(user.player, beatmapId)
       historyDB.save(history)
       return history
     } else return history

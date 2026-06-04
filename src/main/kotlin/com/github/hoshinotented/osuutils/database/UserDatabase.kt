@@ -2,7 +2,6 @@ package com.github.hoshinotented.osuutils.database
 
 import com.github.hoshinotented.osuutils.data.User
 import com.github.hoshinotented.osuutils.io.DefaultFileIO
-import com.github.hoshinotented.osuutils.io.FileIO
 import java.nio.file.Path
 
 class UserDatabase(profileDir: Path) {

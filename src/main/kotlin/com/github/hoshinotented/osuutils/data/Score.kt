@@ -2,9 +2,8 @@
 
 package com.github.hoshinotented.osuutils.data
 
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
+import com.github.hoshinotented.osuutils.api.SeqSerializer
 import com.github.hoshinotented.osuutils.api.data.Score
-import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.SeqView
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.Serializable
@@ -33,7 +32,7 @@ data class ScoreHistory(
   companion object {
     /**
      * Find all scores created since [since].
-     * @param scores must be ordered by [Score.CreateTimeComparator]
+     * @param scores must be ordered by [com.github.hoshinotented.osuutils.api.data.Score.CreateTimeComparator]
      */
     fun binaryAnswer(scores: ImmutableSeq<Score>, since: Instant): SeqView<Score> {
       val dummyScore = Score(0.0F, since, 0, ImmutableSeq.empty(), 0, null)

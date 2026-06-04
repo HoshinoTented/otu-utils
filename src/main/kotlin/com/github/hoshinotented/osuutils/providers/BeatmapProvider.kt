@@ -1,42 +1,35 @@
 package com.github.hoshinotented.osuutils.providers
 
-import com.github.hoshinotented.osuutils.api.BeatmapSets.beatmapSet
-import com.github.hoshinotented.osuutils.api.Beatmaps.beatmap
-import com.github.hoshinotented.osuutils.api.OsuApplication
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.ApplicationRole
+import com.github.hoshinotented.osuutils.api.category.BeatmapSets.beatmapSet
+import com.github.hoshinotented.osuutils.api.category.Beatmaps.beatmap
 import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
 import com.github.hoshinotented.osuutils.api.data.BeatmapExtended
 import com.github.hoshinotented.osuutils.api.data.BeatmapSet
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed
+import com.github.hoshinotented.osuutils.data.BeatmapId
 import com.github.hoshinotented.osuutils.data.BeatmapInCollection
 import com.github.hoshinotented.osuutils.data.BeatmapInfoCache
-import com.github.hoshinotented.osuutils.data.User
+import com.github.hoshinotented.osuutils.data.BeatmapSetId
 import com.github.hoshinotented.osuutils.database.BeatmapDatabase
-import com.github.hoshinotented.osuutils.osudb.LocalOsu
+import com.github.hoshinotented.osuutils.dump.LocalOsu
+import com.github.hoshinotented.osuutils.dump.toBeatmap
 import kala.collection.immutable.ImmutableSeq
 
 interface BeatmapProvider {
-  /**
-   * @return if not null, [com.github.hoshinotented.osuutils.api.data.Beatmap.beatmapSet] and [com.github.hoshinotented.osuutils.api.data.Beatmap.checksum] is always set
-   */
   fun beatmap(beatmapId: BeatmapId): BeatmapExtended?
-
-  /**
-   * @return if not null, [com.github.hoshinotented.osuutils.api.data.BeatmapSet.beatmaps] is always set
-   */
   fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed?
   
   fun or(other: BeatmapProvider): BeatmapProvider = ChainedBeatmapProvider(this, other)
 }
 
-class OnlineBeatmapProvider(val application: OsuApplication, val user: User) : BeatmapProvider {
+class OnlineBeatmapProvider(val application: ApplicationRole) : BeatmapProvider {
   override fun beatmap(beatmapId: BeatmapId): BeatmapExtended? {
-    return application.beatmap(user, beatmapId)
+    return application.beatmap(beatmapId)
   }
 
   override fun beatmapSet(beatmapSetId: BeatmapSetId): BeatmapSetListed? {
-    return application.beatmapSet(user, beatmapSetId)
+    return application.beatmapSet(beatmapSetId)
   }
 }
 
@@ -160,9 +153,9 @@ class BeatmapCollectionBeatmapProvider(
   }
 }
 
-fun BeatmapProviderImpl(application: OsuApplication, user: User, database: BeatmapDatabase): BeatmapProvider {
+fun BeatmapProviderImpl(role: ApplicationRole, database: BeatmapDatabase): BeatmapProvider {
   return LocalBeatmapProvider(database)
-    .or(CacheBeatmapProvider(OnlineBeatmapProvider(application, user), database))
+    .or(CacheBeatmapProvider(OnlineBeatmapProvider(role), database))
 }
 
 class ChainedBeatmapProvider(val left: BeatmapProvider, val right: BeatmapProvider) : BeatmapProvider {

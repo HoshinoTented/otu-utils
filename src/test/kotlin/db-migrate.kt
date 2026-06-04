@@ -1,4 +1,4 @@
-import com.github.hoshinotented.osuutils.api.BeatmapSets.beatmapSet
+import com.github.hoshinotented.osuutils.api.category.BeatmapSets.beatmapSet
 import com.github.hoshinotented.osuutils.cli.Main
 import com.github.hoshinotented.osuutils.util.AccumulateProgressIndicator
 import com.github.hoshinotented.osuutils.util.ProgressIndicator
