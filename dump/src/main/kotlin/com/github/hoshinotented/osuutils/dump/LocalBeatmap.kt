@@ -3,6 +3,10 @@ package com.github.hoshinotented.osuutils.dump
 import com.github.hoshinotented.osuutils.data.BeatmapId
 import com.github.hoshinotented.osuutils.data.IBeatmap
 import com.github.hoshinotented.osuutils.data.Mod
+import com.github.hoshinotented.osuutils.dump.deser.BackingType
+import com.github.hoshinotented.osuutils.dump.deser.LazySeq
+import com.github.hoshinotented.osuutils.dump.deser.ModStarCache
+import com.github.hoshinotented.osuutils.dump.deser.TimePoint
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableEnumSet
 import kotlin.time.Instant
@@ -18,7 +22,7 @@ data class LocalBeatmap(
   val audioFileName: String?,
   val md5Hash: String,
   val osuFileName: String,      // .osu file
-  val rankedStatus: Byte,
+  val rankedStatus: RankedStatus,
   val circleAmount: Short,
   val sliderAmount: Short,
   val spinnerAmount: Short,
@@ -39,13 +43,13 @@ data class LocalBeatmap(
   val beatmapId: Int,
   val beatmapSetId: Int,
   val threadId: Int,
-  val stdGrade: Byte,
-  val taikoGrade: Byte,
-  val ctbGrade: Byte,
-  val maniaGrade: Byte,
+  val stdGrade: AchievedGrade,
+  val taikoGrade: AchievedGrade,
+  val ctbGrade: AchievedGrade,
+  val maniaGrade: AchievedGrade,
   val userOffset: Short,
   val stackLeniency: Float,
-  val gameplayMode: Byte,
+  val gameplayMode: GameplayMode,
   val songSource: String,
   val songTags: String,
   val onlineOffset: Short,
@@ -65,12 +69,19 @@ data class LocalBeatmap(
   val maniaScrollSpeed: Byte,
 ) : IBeatmap {
   companion object {
+    @BackingType(Byte::class)
     enum class RankedStatus {
       Unknown, Unsubmitted, Graveyard, Unused, Ranked, Approved, Qualified, Loved
     }
 
+    @BackingType(Byte::class)
     enum class GameplayMode {
       Std, Taiko, Ctb, Mania
+    }
+
+    @BackingType(Byte::class)
+    enum class AchievedGrade {
+      SSH, SH, SS, S, A, B, C, D, F, None
     }
   }
 

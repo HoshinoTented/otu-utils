@@ -1,15 +1,17 @@
 package com.github.hoshinotented.osuutils.dump.deser
 
-import com.github.hoshinotented.osuutils.dump.IntFloatPair
 import com.github.hoshinotented.osuutils.dump.OsuParseException
 import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
+import kala.control.Option
 import java.nio.charset.Charset
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Instant
 
@@ -103,20 +105,46 @@ fun <T : Any> parse(type: KClass<T>, bytes: LittleEndianDataInputStream, handler
   return parse(type.createType(), bytes, handler) as T?
 }
 
-// TODO: allow corrupted data, add a flag maybe
-fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHandler<*>?): Any? {
-  // pre parse
-  val clazz = type.classifier ?: throw IllegalArgumentException("null")
-  if (clazz !is KClass<*>) throw IllegalArgumentException("Must be KClass")
-  
+fun tryParse(clazz: KClass<*>, type: KType, bytes: LittleEndianDataInputStream): Option<Option<Any>> {
   val found = Deserializers.find(clazz)
   if (found != null) {
     val decoded = found.decode(type.arguments, bytes)
     if (!type.isMarkedNullable && decoded == null) {
       throw OsuParseException("$type is not null while a null value is parsed.")
     }
-    
-    return decoded
+
+    return Option.some(Option.ofNullable(decoded))
+  }
+
+  return Option.none()
+}
+
+fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHandler<*>?): Any? {
+  // pre parse
+  val clazz = type.classifier ?: throw IllegalArgumentException("null")
+  if (clazz !is KClass<*>) throw IllegalArgumentException("Must be KClass")
+  
+  tryParse(clazz, type, bytes).orNull?.let {
+    return it.orNull
+  }
+
+  val backing = clazz.findAnnotation<BackingType>()
+  if (backing != null) {
+    val isEnum = clazz.isSubclassOf(Enum::class)
+    if (! isEnum) throw IllegalArgumentException("BackingType can only be used on enum class")
+
+    val backing = backing.value
+
+    val isNumber = backing.isSubclassOf(Number::class)
+    if (! isNumber) throw IllegalArgumentException("Backing type must be number")
+
+    val result = tryParse(backing, type, bytes).orNull
+      ?: throw IllegalArgumentException("Deserializer for backing type $backing of $type is not found")
+
+    val backingResult = (result.get() as Number).toInt()
+    val constant = clazz.java.enumConstants[backingResult]
+
+    return constant
   }
   
   val primeCon = clazz.primaryConstructor ?: throw IllegalArgumentException("Must have primary constructor")
@@ -126,7 +154,7 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHan
   for (i in params.indices) {
     val p = params[i]
     try {
-      parse(p.type, bytes, null)
+      args[i] = parse(p.type, bytes, null)
     } catch (e: OsuParseException) {
       if (handler != null) {
         return handler.onCorrupted(args)
@@ -135,7 +163,7 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHan
       }
     }
   }
-  
+
   return primeCon.call(*args)
 }
 

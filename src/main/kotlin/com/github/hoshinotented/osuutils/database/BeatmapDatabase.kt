@@ -2,13 +2,13 @@
 
 package com.github.hoshinotented.osuutils.database
 
-import com.github.hoshinotented.osuutils.api.data.BeatmapId
-import com.github.hoshinotented.osuutils.api.data.BeatmapSetId
+import com.github.hoshinotented.osuutils.api.SeqSerializer
 import com.github.hoshinotented.osuutils.api.data.BeatmapCheckSum
 import com.github.hoshinotented.osuutils.api.data.BeatmapSetListed
 import com.github.hoshinotented.osuutils.commonSerde
+import com.github.hoshinotented.osuutils.data.BeatmapId
+import com.github.hoshinotented.osuutils.data.BeatmapSetId
 import com.github.hoshinotented.osuutils.io.FileIO
-import com.github.hoshinotented.osuutils.serde.SeqSerializer
 import kala.collection.immutable.ImmutableSeq
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -21,7 +21,7 @@ object DbMigrate {
     pi.init(sets.size(), "Fetch Beatmap Set Data", null)
     
     sets.forEach {
-      val set = app.beatmapSet(user, it)
+      val set = app.withToken(user.token).beatmapSet(it)
       if (set == null) {
         pi.progress("Beatmap set $it is not found, skip")
       } else {

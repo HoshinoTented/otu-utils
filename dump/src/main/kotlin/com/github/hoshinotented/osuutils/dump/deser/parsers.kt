@@ -41,9 +41,10 @@ fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseLis
       LocalBeatmap::class,
       this,
       BeatmapCorruptedHandler
-    )!!
-    // TODO: maybe move to finally block
-    listener.afterParseBeatmap(idx, max, beatmap)
+    )
+    if (beatmap != null) {
+      listener.afterParseBeatmap(idx, max, beatmap)
+    }
     beatmap
   }.filterNotNull().map { it !! }
 

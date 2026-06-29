@@ -39,6 +39,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-# generated
-
+### Generated ###
 src/main/gen
+
+### Local ###
+.env

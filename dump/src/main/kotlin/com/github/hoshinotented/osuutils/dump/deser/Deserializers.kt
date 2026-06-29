@@ -1,9 +1,5 @@
 package com.github.hoshinotented.osuutils.dump.deser
 
-import com.github.hoshinotented.osuutils.dump.IntFloatPair
-import com.github.hoshinotented.osuutils.dump.LazySeq
-import com.github.hoshinotented.osuutils.dump.ModStarCache
-import com.github.hoshinotented.osuutils.dump.Sized
 import com.github.hoshinotented.osuutils.data.Mod
 import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
@@ -67,7 +63,7 @@ object Deserializers {
         // This will slow down the deserialization, use LazySeq if possible.
         val elemTyProj = typeArgs[0]
         val elemTy = elemTyProj.type ?: throw IllegalArgumentException("Unable to decode a star type")
-        return bytes.readMany { _, _ -> parse(elemTy, this) }
+        return bytes.readMany { _, _ -> parse(elemTy, this, null) }
       }
     })
 
@@ -127,7 +123,7 @@ object Deserializers {
           val stream = LittleEndianDataInputStream(ByteArrayInputStream(buffer))
 
           repeat(count) {
-            result.append(parse(ty, stream))
+            result.append(parse(ty, stream, null))
           }
 
           result.freeze()
