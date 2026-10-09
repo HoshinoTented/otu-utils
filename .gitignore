@@ -44,3 +44,4 @@ src/main/gen
 
 ### Local ###
 .env
+.envrc
