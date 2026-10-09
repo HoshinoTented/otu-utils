@@ -1,7 +1,7 @@
 dependencies {
   implementation(kotlin("reflect"))
-  implementation(project(":data"))
-  implementation(libs.guava)
+  api(project(":data"))
+  api(libs.guava)
 
   testImplementation(project(":"))
 }

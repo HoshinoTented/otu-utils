@@ -17,6 +17,18 @@ interface LocalOsuParseListener {
    */
   fun beforeParseBeatmap(index: Int, max: Int)
   fun afterParseBeatmap(index: Int, max: Int, beatmap: LocalBeatmap)
+
+  object Empty : LocalOsuParseListener {
+    override fun beforeParseBeatmap(index: Int, max: Int) {
+    }
+
+    override fun afterParseBeatmap(
+      index: Int,
+      max: Int,
+      beatmap: LocalBeatmap
+    ) {
+    }
+  }
 }
 
 object BeatmapCorruptedHandler : CorruptedHandler<LocalBeatmap?> {
@@ -34,7 +46,7 @@ fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseLis
   val folderCount = bytes.readInt()
   val unlocked = bytes.readBoolean()
   val unlockedTime = bytes.readDateTime()
-  val playerName = bytes.readString()!!
+  val playerName = bytes.readString()
   val beatmaps = bytes.readMany { idx, max ->
     listener.beforeParseBeatmap(idx, max)
     val beatmap = parse(

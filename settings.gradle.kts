@@ -4,5 +4,6 @@ include(
   "data",
   "api",
   "dump",
+  "dump-cli",
   "modexpr",
 )

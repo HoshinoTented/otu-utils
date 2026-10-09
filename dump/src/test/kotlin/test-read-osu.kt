@@ -1,5 +1,6 @@
 import com.github.hoshinotented.osuutils.dump.LocalBeatmap
 import com.github.hoshinotented.osuutils.dump.LocalCollections
+import com.github.hoshinotented.osuutils.dump.LocalScore
 import com.github.hoshinotented.osuutils.dump.LocalScores
 import com.github.hoshinotented.osuutils.dump.deser.parse
 import com.github.hoshinotented.osuutils.dump.deser.parseLocalOsu
@@ -7,6 +8,7 @@ import com.github.hoshinotented.osuutils.util.ConsoleOsuParseListener
 import com.google.common.io.LittleEndianDataInputStream
 import kotlin.io.path.Path
 import kotlin.io.path.inputStream
+import kotlin.io.path.listDirectoryEntries
 import kotlin.test.Test
 import kotlin.time.measureTimedValue
 
@@ -59,5 +61,28 @@ class ReadOsuTest {
       ConsoleOsuParseListener()
     )
     return
+  }
+
+  /**
+   * Used for finding untracked/lost replay, make sure you have the beatmap in local osu and change beatmapId to the desired beatmap
+   */
+  @Test
+  fun recoverReplay() {
+    val beatmapId = 1701400L
+    val `in` = LittleEndianDataInputStream(osuPath.resolve("osu!.db").inputStream())
+    val osu = parseLocalOsu(`in`, ConsoleOsuParseListener())
+    val beatmap = osu.beatmapById.getOrNull(beatmapId)
+      ?: throw IllegalArgumentException("Beatmap not found in local database")
+
+    val replayDir = osuPath.resolve("Data").resolve("r")
+
+    val entries = replayDir.listDirectoryEntries("${beatmap.md5Hash}-*.osr")
+    for (osr in entries) {
+      val `in` = LittleEndianDataInputStream(osr.inputStream())
+      val score = parse(LocalScore::class, `in`, null)!!
+      if (score.beatmapMd5Hash == beatmap.md5Hash) {
+        println("Found score with hash ${score.replayMd5Hash}(${score.accuracy}%): ${osr.fileName}")
+      }
+    }
   }
 }

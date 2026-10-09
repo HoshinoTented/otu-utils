@@ -46,6 +46,13 @@ enum class Mod {
       
       return set
     }
+
+    fun toString(mods: MutableEnumSet<Mod>): String {
+      if (mods.isEmpty) return "NM"
+
+      val modSeq = mods.toSeq().sortedBy { it.ordinal }
+      return modSeq.joinToString(separator = " ") { it.toString() }
+    }
     
     fun toBitMask(mods: ImmutableSeq<Mod>): Int {
       var bits = 0x0

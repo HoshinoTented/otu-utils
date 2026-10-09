@@ -17,7 +17,7 @@ import kotlin.time.Instant
 
 @FunctionalInterface
 interface Deserializer<T : Any> {
-  fun decode(typeArgs: List<KTypeProjection>, bytes: LittleEndianDataInputStream): T?
+  fun decode(typeArgs: List<KTypeProjection>, bytes: LittleEndianDataInputStream): T
 }
 
 fun LittleEndianDataInputStream.readIntFloatPair(): IntFloatPair {
@@ -65,9 +65,9 @@ fun LittleEndianDataInputStream.skipString() {
   skipBytes(length)
 }
 
-fun LittleEndianDataInputStream.readString(): String? {
+fun LittleEndianDataInputStream.readString(): String {
   val indicator = this.read()
-  if (indicator == 0x00) return null
+  if (indicator == 0x00) return ""
   if (indicator != 0x0B) throw OsuParseException("Illegal format, unexpected byte: 0x${indicator.toHexString()}")
   
   val ulength = readULEB128()
@@ -105,27 +105,23 @@ fun <T : Any> parse(type: KClass<T>, bytes: LittleEndianDataInputStream, handler
   return parse(type.createType(), bytes, handler) as T?
 }
 
-fun tryParse(clazz: KClass<*>, type: KType, bytes: LittleEndianDataInputStream): Option<Option<Any>> {
+fun tryParse(clazz: KClass<*>, type: KType, bytes: LittleEndianDataInputStream): Option<Any> {
   val found = Deserializers.find(clazz)
   if (found != null) {
     val decoded = found.decode(type.arguments, bytes)
-    if (!type.isMarkedNullable && decoded == null) {
-      throw OsuParseException("$type is not null while a null value is parsed.")
-    }
-
     return Option.some(Option.ofNullable(decoded))
   }
 
   return Option.none()
 }
 
-fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHandler<*>?): Any? {
+fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHandler<*>?): Any {
   // pre parse
   val clazz = type.classifier ?: throw IllegalArgumentException("null")
   if (clazz !is KClass<*>) throw IllegalArgumentException("Must be KClass")
   
   tryParse(clazz, type, bytes).orNull?.let {
-    return it.orNull
+    return it
   }
 
   val backing = clazz.findAnnotation<BackingType>()
@@ -141,7 +137,7 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHan
     val result = tryParse(backing, type, bytes).orNull
       ?: throw IllegalArgumentException("Deserializer for backing type $backing of $type is not found")
 
-    val backingResult = (result.get() as Number).toInt()
+    val backingResult = (result as Number).toInt()
     val constant = clazz.java.enumConstants[backingResult]
 
     return constant
@@ -156,11 +152,7 @@ fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHan
     try {
       args[i] = parse(p.type, bytes, null)
     } catch (e: OsuParseException) {
-      if (handler != null) {
-        return handler.onCorrupted(args)
-      } else {
-        throw e
-      }
+      throw e
     }
   }
 

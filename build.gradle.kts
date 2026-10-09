@@ -10,8 +10,9 @@ val projectVersion: String = libs.versions.project.get()
 
 application.mainClass.set("com.github.hoshinotented.osuutils.cli.MainKt")
 
-tasks.named<JavaExec>("run") {
+tasks.withType<JavaExec> {
   standardInput = System.`in`
+  standardOutput = System.out
 }
 
 allprojects {
@@ -58,8 +59,6 @@ dependencies {
   implementation(libs.sqlite)
   
   kapt(libs.picocli.codegen)
-  
-//  testImplementation(kotlin("test"))
 }
 
 
