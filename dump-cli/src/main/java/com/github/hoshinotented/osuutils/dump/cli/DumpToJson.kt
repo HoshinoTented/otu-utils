@@ -182,13 +182,9 @@ class DumpToJson(
       val p = params[i]
       val pTy = p.type
 
-      try {
-        val name = p.name ?: throw IllegalArgumentException("Must have name")
-        out.name(name)
-        read(pTy)
-      } catch (e: OsuParseException) {
-        throw e
-      }
+      val name = p.name ?: throw IllegalArgumentException("Must have name")
+      out.name(name)
+      read(pTy)
     }
     
     out.endObject()

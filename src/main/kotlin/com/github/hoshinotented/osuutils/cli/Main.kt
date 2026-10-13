@@ -7,8 +7,7 @@ import com.github.hoshinotented.osuutils.database.*
 import com.github.hoshinotented.osuutils.io.DefaultFileIO
 import com.github.hoshinotented.osuutils.io.DryFileIO
 import com.github.hoshinotented.osuutils.dump.*
-import com.github.hoshinotented.osuutils.dump.deser.LocalOsuParseListener
-import com.github.hoshinotented.osuutils.dump.deser.parse
+import com.github.hoshinotented.osuutils.dump.deser.Deserializers
 import com.github.hoshinotented.osuutils.dump.deser.parseLocalOsu
 import com.github.hoshinotented.osuutils.providers.BeatmapProviderImpl
 import com.github.hoshinotented.osuutils.providers.LocalOsuScoreProvider
@@ -39,8 +38,7 @@ class Main : MainArgs() {
   
   internal val localScores by lazy {
     useLocalOsu("scores.db") {
-      parse(LocalScores::class, it, null)
-        ?: throw OsuParseException("Unable to find any scores in scores.db, this could be either this application is out-of-date or the database is corrupted.")
+      Deserializers.read(LocalScores::class, it)
     }
   }
   

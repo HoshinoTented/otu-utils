@@ -19,6 +19,7 @@ import kala.collection.mutable.MutableList
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
+// TODO: 考虑更有意义的分析, 比如将每天的成绩与以往的成绩进行比较计算综合表现。
 class AnalyzeAction(
   role: ApplicationRole,
   val user: User,

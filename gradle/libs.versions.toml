@@ -15,9 +15,13 @@ guava = "33.5.0-jre"
 kotlinx = "1.9.0"
 sqlite = "3.51.1.0"
 
+common-math = "3.6.1"
+
 antlr = "4.5"
 
 [libraries]
+
+common-math = { group = "org.apache.commons", name = "commons-math3", version.ref = "common-math" }
 
 kala-base = { group = "org.glavo.kala", name = "kala-base", version.ref = "kala" }
 kala-collection = { group = "org.glavo.kala", name = "kala-collection", version.ref = "kala" }

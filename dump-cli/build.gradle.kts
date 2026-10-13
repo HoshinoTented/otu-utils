@@ -1,8 +1,11 @@
+import com.github.hoshinotented.gradle.CommonTasks
+
 plugins {
   application
 }
 
-application.mainClass = "com.github.hoshinotented.osuutils.dump.cli.Main"
+val mainClass = "com.github.hoshinotented.osuutils.dump.cli.Main"
+application.mainClass = mainClass
 
 tasks.named<JavaExec>("run") {
   standardInput = System.`in`
@@ -16,17 +19,4 @@ dependencies {
   implementation(libs.gson)
 }
 
-tasks.register<Jar>("fatJar") {
-  archiveClassifier.set("fat")
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  from(project.configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-  manifest {
-    attributes["Main-Class"] = application.mainClass.get()
-  }
-
-  exclude("**/module-info.class")
-
-  val jar = tasks.jar
-  dependsOn(jar)
-  with(jar.get())
-}
+CommonTasks.fatJar(project, application.mainClass)

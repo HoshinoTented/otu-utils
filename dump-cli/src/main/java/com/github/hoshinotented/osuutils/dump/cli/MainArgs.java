@@ -27,13 +27,13 @@ public abstract class MainArgs {
   boolean binary = false;
 
   static class FileType {
-    @CommandLine.Option(names = "--database")
+    @CommandLine.Option(names = "--database", description = "Treat the input file as an 'osu!.db' file. Default.")
     boolean database;
-    @CommandLine.Option(names = "--scores")
+    @CommandLine.Option(names = "--scores", description = "Treat the input file as a 'score.db' file.")
     boolean scores;
-    @CommandLine.Option(names = "--score")
+    @CommandLine.Option(names = "--score", description = "Treat the input file as a '.osr' file.")
     boolean score;
-    @CommandLine.Option(names = "--collection")
+    @CommandLine.Option(names = "--collection", description = "Treat the input file as a 'collection.db' file.")
     boolean collection;
   }
 }

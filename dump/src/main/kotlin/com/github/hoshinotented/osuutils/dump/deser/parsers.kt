@@ -49,16 +49,15 @@ fun parseLocalOsu(bytes: LittleEndianDataInputStream, listener: LocalOsuParseLis
   val playerName = bytes.readString()
   val beatmaps = bytes.readMany { idx, max ->
     listener.beforeParseBeatmap(idx, max)
-    val beatmap = parse(
+
+    val beatmap = Deserializers.read(
       LocalBeatmap::class,
-      this,
-      BeatmapCorruptedHandler
+      this@readMany,
     )
-    if (beatmap != null) {
-      listener.afterParseBeatmap(idx, max, beatmap)
-    }
+
+    listener.afterParseBeatmap(idx, max, beatmap)
     beatmap
-  }.filterNotNull().map { it !! }
+  }
 
   val permission = bytes.readInt()
 

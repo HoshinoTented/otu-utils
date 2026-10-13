@@ -4,21 +4,8 @@ import com.github.hoshinotented.osuutils.dump.OsuParseException
 import com.google.common.io.LittleEndianDataInputStream
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.FreezableMutableList
-import kala.control.Option
 import java.nio.charset.Charset
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.full.createType
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.primaryConstructor
 import kotlin.time.Instant
-
-@FunctionalInterface
-interface Deserializer<T : Any> {
-  fun decode(typeArgs: List<KTypeProjection>, bytes: LittleEndianDataInputStream): T
-}
 
 fun LittleEndianDataInputStream.readIntFloatPair(): IntFloatPair {
   val intIndicator = readByte()
@@ -98,65 +85,6 @@ fun LittleEndianDataInputStream.readULEB128(): ULong {
   } while (byte and 0x80 != 0)
   
   return result
-}
-
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> parse(type: KClass<T>, bytes: LittleEndianDataInputStream, handler: CorruptedHandler<T?>?): T? {
-  return parse(type.createType(), bytes, handler) as T?
-}
-
-fun tryParse(clazz: KClass<*>, type: KType, bytes: LittleEndianDataInputStream): Option<Any> {
-  val found = Deserializers.find(clazz)
-  if (found != null) {
-    val decoded = found.decode(type.arguments, bytes)
-    return Option.some(Option.ofNullable(decoded))
-  }
-
-  return Option.none()
-}
-
-fun parse(type: KType, bytes: LittleEndianDataInputStream, handler: CorruptedHandler<*>?): Any {
-  // pre parse
-  val clazz = type.classifier ?: throw IllegalArgumentException("null")
-  if (clazz !is KClass<*>) throw IllegalArgumentException("Must be KClass")
-  
-  tryParse(clazz, type, bytes).orNull?.let {
-    return it
-  }
-
-  val backing = clazz.findAnnotation<BackingType>()
-  if (backing != null) {
-    val isEnum = clazz.isSubclassOf(Enum::class)
-    if (! isEnum) throw IllegalArgumentException("BackingType can only be used on enum class")
-
-    val backing = backing.value
-
-    val isNumber = backing.isSubclassOf(Number::class)
-    if (! isNumber) throw IllegalArgumentException("Backing type must be number")
-
-    val result = tryParse(backing, type, bytes).orNull
-      ?: throw IllegalArgumentException("Deserializer for backing type $backing of $type is not found")
-
-    val backingResult = (result as Number).toInt()
-    val constant = clazz.java.enumConstants[backingResult]
-
-    return constant
-  }
-  
-  val primeCon = clazz.primaryConstructor ?: throw IllegalArgumentException("Must have primary constructor")
-  val params = primeCon.parameters
-  val args = arrayOfNulls<Any?>(params.size)
-
-  for (i in params.indices) {
-    val p = params[i]
-    try {
-      args[i] = parse(p.type, bytes, null)
-    } catch (e: OsuParseException) {
-      throw e
-    }
-  }
-
-  return primeCon.call(*args)
 }
 
 private const val UNIX_EPOCH_MILLISECONDS = 62135596800000L

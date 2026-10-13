@@ -1,3 +1,5 @@
+import com.github.hoshinotented.gradle.CommonTasks
+
 plugins {
   id("java")
   kotlin("jvm") version "2.3.21"
@@ -57,6 +59,8 @@ dependencies {
   implementation(libs.jfreechart)
   implementation(libs.guava)
   implementation(libs.sqlite)
+
+  implementation(libs.common.math)
   
   kapt(libs.picocli.codegen)
 }
@@ -94,19 +98,7 @@ val generateVersion = tasks.register("generateVersion") {
   }
 }
 
-tasks.register<Jar>("fatJar") {
-  archiveClassifier.set("fat")
-  from(project.configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-  manifest {
-    attributes["Main-Class"] = application.mainClass.get()
-  }
-  
-  exclude("**/module-info.class")
-  
-  val jar = tasks.jar
-  dependsOn(jar)
-  with(jar.get())
-}
+CommonTasks.fatJar(project, application.mainClass)
 
 tasks.compileJava {
   dependsOn(generateVersion)

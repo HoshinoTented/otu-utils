@@ -71,7 +71,7 @@ public class Main extends MainArgs implements Callable<Integer> {
     } else if (fileType.scores) {
       type = LocalScores.class;
     } else if (fileType.collection) {
-      type = LocalCollection.class;
+      type = LocalCollections.class;
     } else {
       throw new UnsupportedOperationException("unreachable");
     }
