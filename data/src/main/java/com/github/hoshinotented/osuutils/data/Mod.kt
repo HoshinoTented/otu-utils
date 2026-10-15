@@ -63,7 +63,9 @@ enum class Mod {
       
       return bits
     }
-    
+
+
     val DIFFICULTY_CHANGE_MODS = ImmutableSeq.of(EZ, HT, HR, HD, DT, NC, TD)
+    val DIFFICULTY_CHANGE_MODS_MASK = toBitMask(DIFFICULTY_CHANGE_MODS)
   }
 }

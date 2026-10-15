@@ -31,6 +31,9 @@ data class ScoreUserAttribute(val pin: Pin) {
 }
 
 /**
+ * We don't store `beatmapId` in [Score] cause you are using beatmapId to
+ * query scores in usual.
+ *
  * @param id the id of score, this value may invalid, such as local scores
  * @param currentUserAttribute set when requested from [Beatmaps.beatmapScores]
  */

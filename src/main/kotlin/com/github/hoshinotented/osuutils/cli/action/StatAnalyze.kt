@@ -1,9 +1,12 @@
 package com.github.hoshinotented.osuutils.cli.action
 
+import com.github.hoshinotented.osuutils.data.Mod
+import com.github.hoshinotented.osuutils.dump.LocalScore
 import com.github.hoshinotented.osuutils.dump.LocalScoredBeatmap
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kala.collection.immutable.ImmutableSeq
+import kala.collection.mutable.MutableEnumSet
 import kala.collection.mutable.MutableList
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.ArrayRealVector
@@ -12,7 +15,6 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import java.time.Instant
 import kotlin.math.ln
 import kotlin.math.sqrt
-import kotlin.time.Clock
 import kotlin.time.toJavaInstant
 
 /**
@@ -45,11 +47,6 @@ class StatAnalyze(
    * @param difficulties 预测的谱面难度
    */
   class Result(val potentials: DoubleArray, val difficulties: DoubleArray)
-
-  /**
-   * @param beatmaps 第 `i` 个元素是谱面的 md5hash, 难度为 [Result.difficulties] 中的第 `i` 个.
-   */
-  class RichResult(val result: Result, val beatmaps: ImmutableSeq<String>, val dayArrange: ImmutableSeq<Int>)
 
   fun logit(rawScore: Double): Double {
     val smooth = (rawScore + 0.005) / 100.01
@@ -147,6 +144,35 @@ class StatAnalyze(
   }
 
   companion object {
+    data class ModdedBeatmap(val mod: MutableEnumSet<Mod>, val map: LocalScoredBeatmap) {
+      override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ModdedBeatmap
+
+        if (mod != other.mod) return false
+        if (map.md5Hash != other.map.md5Hash) return false
+
+        return true
+      }
+
+      override fun hashCode(): Int {
+        var result = mod.hashCode()
+        result = 31 * result + map.md5Hash.hashCode()
+        return result
+      }
+    }
+
+    /**
+     * @param beatmaps 第 `i` 个元素是谱面的 md5hash, 难度为 [Result.difficulties] 中的第 `i` 个.
+     */
+    class RichResult(
+      val result: Result,
+      val beatmaps: ImmutableSeq<ModdedBeatmap>,
+      val dayArrange: ImmutableSeq<Int>
+    )
+
     /**
      * @param scores 参与统计的谱面及其分数, 调用前应该先清除非玩家游玩的成绩
      * @param maxDays 统计过去多少天的游玩成绩 (按自然日划分, 00:00 为一天的分界)
@@ -168,36 +194,58 @@ class StatAnalyze(
       val zone = ZoneId.systemDefault()
       val today = now.atZone(zone).toLocalDate()
 
-      // 过滤最近 maxDays 天内的成绩, 并按天聚合成每日成绩
-      val dayScoresByMap = scores.map { map ->
-        val playCountOnDay = IntArray(maxDays)
-        val sumAccOnDay = DoubleArray(maxDays)
-        val maxAccOnDay = DoubleArray(maxDays) { Double.NEGATIVE_INFINITY }
+      val moddedMap = scores.flatMap { map ->
+        val moddedScores = map.scores.groupBy {
+          it.mods and Mod.DIFFICULTY_CHANGE_MODS_MASK
+        }
 
-        map.scores.forEach { score ->
+        moddedScores.map { (mod, score) ->
+          val map = map.copy(scores = ImmutableSeq.from(score))
+          ModdedBeatmap(Mod.asSet(mod), map)
+        }
+      }
+
+      // 过滤最近 maxDays 天内的成绩, 并按天聚合成每日成绩
+      // 同时更新 ModdedBeatmap, 使其内部仅包含参与统计的成绩
+      val dayScoresByMap = moddedMap.map { modded ->
+        val scoreByDay = Array<MutableList<LocalScore>>(maxDays) {
+          MutableList.create()
+        }
+
+        // 收集日期内的成绩
+        modded.map.scores.forEach { score ->
           val dayIdx = ChronoUnit.DAYS.between(
             score.createTime.toJavaInstant().atZone(zone).toLocalDate(),
             today
           ).toInt()
           if (dayIdx !in 0 until maxDays) return@forEach
 
-          val acc = score.accuracy.toDouble() * 100
-          playCountOnDay[dayIdx]++
-          sumAccOnDay[dayIdx] += acc
-          if (acc > maxAccOnDay[dayIdx]) maxAccOnDay[dayIdx] = acc
+          scoreByDay[dayIdx].append(score)
         }
 
         val dayScores = MutableList.create<Score>()
 
+        // 计算日期内每天的成绩
         for (dayIdx in 0 until maxDays) {
-          val pc = playCountOnDay[dayIdx]
-          if (pc == 0) continue
+          val scoreInDay = scoreByDay[dayIdx]
+          if (scoreInDay.isEmpty) continue
 
-          val acc = if (meanOrMax) sumAccOnDay[dayIdx] / pc else maxAccOnDay[dayIdx]
+          val acc = if (meanOrMax) {
+            scoreInDay.sumOf { it.accuracy.toDouble() * 100 } / scoreInDay.size()
+          } else {
+            scoreInDay.maxOf { it.accuracy.toDouble() * 100 }
+          }
+
           dayScores.append(Score(0, dayIdx, 0, acc))
         }
 
-        map to dayScores
+        val updatedMap = modded.copy(
+          map = modded.map.copy(
+            scores = ImmutableSeq.from(scoreByDay.flatMap { it })
+          )
+        )
+
+        updatedMap to dayScores
       }
 
       // 跳过数据不足的谱面
@@ -208,7 +256,8 @@ class StatAnalyze(
 
       if (validMaps.isEmpty()) return null
 
-      // 重新排列谱面和天数: 消除不参与统计的天数
+      // 重新排列天数: 消除不参与统计的天数
+      // 索引 `i` 表示第 `i` 个有数据的天数
       val usedDays = validMaps
         .flatMap { (_, dayScores) -> dayScores.map { it.playerIdx } }
         .distinct()
@@ -222,7 +271,7 @@ class StatAnalyze(
 
       val result = StatAnalyze(ImmutableSeq.from(arrangedScores)).analyze()
 
-      return RichResult(result, validMaps.map { it.first.md5Hash }, usedDays)
+      return RichResult(result, validMaps.map { it.first }, usedDays)
     }
   }
 }

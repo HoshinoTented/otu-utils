@@ -153,6 +153,16 @@ class CommandListAnalyze : Callable<Int> {
   }
 }
 
+@CommandLine.Command(name = "stat-analyze", aliases = ["sa"], description = ["Analyze statistics"])
+class CommandStatAnalyze : Callable<Int> {
+  @CommandLine.ParentCommand
+  lateinit var parent: Main
+
+  override fun call(): Int {
+    return 0
+  }
+}
+
 @CommandLine.Command(name = "rollback", description = ["Delete scores by last analyze"])
 class CommandRollback : Callable<Int> {
   @CommandLine.ParentCommand

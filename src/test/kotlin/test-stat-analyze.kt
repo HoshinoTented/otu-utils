@@ -1,4 +1,5 @@
 import com.github.hoshinotented.osuutils.api.prettyBeatmap
+import com.github.hoshinotented.osuutils.api.prettyMods
 import com.github.hoshinotented.osuutils.cli.action.StatAnalyze
 import kala.collection.immutable.ImmutableSeq
 import kala.collection.mutable.MutableList
@@ -56,9 +57,12 @@ class StatAnalyzeTest : OsuBaseTest() {
 
     println("谱面难度修正(越大越难):")
     res.result.difficulties.forEachIndexed { idx, diff ->
-      val hash = res.beatmaps[idx]
+      val modded = res.beatmaps[idx]
+      val hash = modded.map.md5Hash
       val map = beatmapByHash.getOrNull(hash)
 
+      val scoreCount = modded.map.scores.size()
+      val mod = prettyMods(modded.mod)
       val mapDisplay = if (map != null) {
         val display = prettyBeatmap(map)
         "${map.beatmapId} - $display"
@@ -66,7 +70,7 @@ class StatAnalyzeTest : OsuBaseTest() {
         hash
       }
 
-      println("$mapDisplay: 难度修正为 $diff")
+      println("$mapDisplay $mod($scoreCount): 难度修正为 $diff")
     }
   }
 }
